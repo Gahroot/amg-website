@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { StarParticles } from "@/components/effects/star-particles";
+import { Spotlight } from "@/components/effects/spotlight";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -68,6 +70,8 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <Spotlight fixed />
+          <StarParticles fixed starCount={100} />
           {children}
         </ThemeProvider>
       </body>

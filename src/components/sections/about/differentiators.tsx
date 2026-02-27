@@ -1,27 +1,26 @@
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
-import { Shield, Users, Lock, Compass } from "lucide-react";
 
 const differentiators = [
   {
-    icon: Shield,
+    symbol: "\u2295",
     title: "INTEGRATION OVER ISOLATION",
     description:
       "Where others provide point solutions, we provide a unified operating system.",
   },
   {
-    icon: Users,
+    symbol: "\u25CE",
     title: "WORLD-CLASS PRACTITIONERS",
     description:
       "Every partner is a recognized leader in their field — former intelligence officers, Yale physicians, Fortune 100 coaches.",
   },
   {
-    icon: Lock,
+    symbol: "\u2B22",
     title: "ABSOLUTE DISCRETION",
     description:
       "We serve clients who cannot afford public exposure. Confidentiality is foundational, not aspirational.",
   },
   {
-    icon: Compass,
+    symbol: "\u25C8",
     title: "ADAPTIVE METHODOLOGY",
     description:
       "Our framework evolves with your threats, your family, and your enterprise.",
@@ -44,27 +43,24 @@ export function Differentiators() {
           </p>
         </AnimateOnScroll>
 
-        <div className="mt-16 space-y-10">
-          {differentiators.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <AnimateOnScroll key={item.title} delay={index * 0.1}>
-                <div className="flex items-start gap-6">
-                  <div className="flex w-14 h-14 rounded-full bg-primary/10 border border-primary/30 items-center justify-center flex-shrink-0">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-mono text-lg font-semibold uppercase tracking-tight mb-2 text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground max-w-xl">
-                      {item.description}
-                    </p>
-                  </div>
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {differentiators.map((item, index) => (
+            <AnimateOnScroll key={item.title} delay={index * 0.1}>
+              <div className="flex items-start gap-5 border border-border rounded-lg p-6 bg-card">
+                <span className="text-2xl text-primary flex-shrink-0 mt-1">
+                  {item.symbol}
+                </span>
+                <div>
+                  <h3 className="font-mono text-lg font-semibold uppercase tracking-tight mb-2 text-foreground">
+                    {item.title}
+                  </h3>
+                  <p className="text-muted-foreground max-w-xl">
+                    {item.description}
+                  </p>
                 </div>
-              </AnimateOnScroll>
-            );
-          })}
+              </div>
+            </AnimateOnScroll>
+          ))}
         </div>
       </div>
     </section>

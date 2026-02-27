@@ -91,7 +91,7 @@ const domains = [
 
 export function StrategiesDomains() {
   return (
-    <section className="py-24 lg:py-32 bg-card">
+    <section className="py-24 lg:py-32 bg-card/90">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <AnimateOnScroll>
           <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">

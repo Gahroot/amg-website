@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { navLinks } from "@/lib/nav-data";
+import { siteConfig } from "@/lib/site-config";
+import { Button } from "@/components/ui/button";
 import { NavbarInteractive } from "./navbar-interactive";
 
 export function Navbar() {
@@ -9,30 +11,35 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="font-mono uppercase tracking-wider text-sm font-bold">
-            ANCHOR MILL GROUP
+            ◈ ANCHOR MILL GROUP
           </Link>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav links — skip Home */}
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks
+              .filter((link) => link.href !== "/")
+              .map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
           </nav>
 
-          {/* Right side: Client Login + interactive controls */}
+          {/* Right side: Client Portal + Schedule CTA + interactive controls */}
           <div className="flex items-center gap-2">
             <Link
-              href="/login"
+              href={siteConfig.portalUrl}
               className="hidden md:inline-flex text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Client Login
+              Client Portal
             </Link>
+            <Button size="sm" asChild className="hidden md:inline-flex">
+              <Link href={siteConfig.scheduleUrl}>Schedule a Call</Link>
+            </Button>
             <NavbarInteractive />
           </div>
         </div>

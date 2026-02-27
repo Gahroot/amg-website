@@ -1,40 +1,49 @@
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
-import { Search, Map, Users, RefreshCw } from "lucide-react";
+import { Search, Eye, Map, Users, RefreshCw } from "lucide-react";
 
 const steps = [
   {
     number: "01",
     icon: Search,
-    title: "INTEGRATED DISCOVERY",
+    title: "DISCOVERY & ALIGNMENT",
     description:
-      "A comprehensive cross-domain assessment that maps vulnerabilities across all five domains simultaneously — revealing the blind spots that siloed advisors miss.",
+      "Confidential intake and cross-domain scoping to understand your full risk landscape, priorities, and existing advisory relationships.",
     details:
-      "Our discovery process begins with a confidential intake and spans 2-4 weeks. We deploy domain specialists in neurobiology, cybersecurity, leadership, medicine, and intelligence to conduct parallel assessments. The result is a unified threat and opportunity map that no single advisor could produce alone.",
+      "Our discovery process begins with a confidential intake and spans 2-4 weeks. We deploy domain specialists across cybersecurity, intelligence, advisory, and operations to conduct parallel assessments. The result is a unified threat and opportunity map that no single advisor could produce alone.",
   },
   {
     number: "02",
-    icon: Map,
-    title: "CUSTOM BLUEPRINT",
+    icon: Eye,
+    title: "INTELLIGENCE & ASSESSMENT",
     description:
-      "A unified strategic plan that coordinates legal, financial, security, health, and intelligence resources into a single coherent action plan.",
+      "Comprehensive baseline assessment across cyber, physical, digital exposure, health, governance, and geopolitical risk domains.",
+    details:
+      "Our intelligence team conducts a thorough baseline assessment spanning all relevant risk domains. We evaluate your current posture, identify gaps in existing coverage, and map interdependencies between threat vectors that siloed advisors typically miss.",
+  },
+  {
+    number: "03",
+    icon: Map,
+    title: "ARCHITECTURE & STRATEGY",
+    description:
+      "A unified strategic plan that coordinates resources across all domains into a single coherent action plan.",
     details:
       "Your blueprint prioritizes interventions by risk severity and interdependency. Each recommendation is sequenced, resourced, and assigned to a responsible domain partner — with clear timelines and measurable outcomes defined from the start.",
   },
   {
-    number: "03",
+    number: "04",
     icon: Users,
-    title: "COORDINATED DELIVERY",
+    title: "ECOSYSTEM ACTIVATION",
     description:
       "Single point of accountability across all domains. Your AMG partner orchestrates every specialist, every timeline, every deliverable.",
     details:
       "Your dedicated AMG partner serves as the single point of contact and accountability. They coordinate across all domain specialists, manage timelines, resolve conflicts between workstreams, and ensure nothing falls through the cracks between advisors.",
   },
   {
-    number: "04",
+    number: "05",
     icon: RefreshCw,
-    title: "ONGOING SUPPORT",
+    title: "ONGOING OPERATIONS & EVOLUTION",
     description:
-      "Continuous monitoring, quarterly reviews, and adaptive refinement as threats evolve and family circumstances change.",
+      "Continuous monitoring, quarterly reviews, and adaptive refinement as threats evolve and circumstances change.",
     details:
       "Threats evolve. Family dynamics shift. Markets move. Our ongoing support includes quarterly strategic reviews, 24/7 incident response capability, annual reassessments, and proactive intelligence briefings tailored to your specific risk profile.",
   },
@@ -42,7 +51,7 @@ const steps = [
 
 export function JourneyDetail() {
   return (
-    <section className="py-24 lg:py-32 bg-card">
+    <section className="py-24 lg:py-32 bg-card/90">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <AnimateOnScroll>
           <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
@@ -52,7 +61,7 @@ export function JourneyDetail() {
             YOUR JOURNEY WITH AMG
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            A disciplined four-phase methodology that transforms fragmented
+            A disciplined five-phase methodology that transforms fragmented
             protection into integrated resilience.
           </p>
         </AnimateOnScroll>

@@ -13,6 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { navLinks } from "@/lib/nav-data";
+import { siteConfig } from "@/lib/site-config";
 
 export function NavbarInteractive() {
   const [open, setOpen] = useState(false);
@@ -42,7 +43,7 @@ export function NavbarInteractive() {
           <SheetContent side="right">
             <SheetHeader>
               <SheetTitle className="font-mono uppercase tracking-wider text-sm">
-                ANCHOR MILL GROUP
+                ◈ ANCHOR MILL GROUP
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-4">
@@ -57,12 +58,17 @@ export function NavbarInteractive() {
                 </Link>
               ))}
               <Link
-                href="/login"
+                href={siteConfig.portalUrl}
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground py-2 text-sm transition-colors"
               >
-                Client Login
+                Client Portal
               </Link>
+              <Button size="sm" asChild className="mt-4">
+                <Link href={siteConfig.scheduleUrl} onClick={() => setOpen(false)}>
+                  Schedule a Call
+                </Link>
+              </Button>
             </nav>
           </SheetContent>
         </Sheet>

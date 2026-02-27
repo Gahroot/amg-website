@@ -64,7 +64,7 @@ function MetricCard({
 
 export function Metrics() {
   return (
-    <section id="metrics" className="py-24 lg:py-32 bg-card">
+    <section id="metrics" className="py-24 lg:py-32 bg-card/90">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
           BY THE NUMBERS

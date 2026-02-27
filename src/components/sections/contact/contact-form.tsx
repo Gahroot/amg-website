@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+import { siteConfig } from "@/lib/site-config";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -120,14 +121,14 @@ export function ContactForm() {
                 you what integrated protection looks like.
               </p>
               <a
-                href="mailto:inquiries@anchormillgroup.com"
+                href={`mailto:${siteConfig.email}`}
                 className="inline-flex items-center gap-3 text-foreground hover:text-primary transition-colors group"
               >
                 <span className="inline-flex items-center justify-center size-10 rounded-full border border-border group-hover:border-primary transition-colors">
                   <Mail className="size-4" />
                 </span>
                 <span className="font-mono text-sm">
-                  inquiries@anchormillgroup.com
+                  {siteConfig.email}
                 </span>
               </a>
               <p className="text-muted-foreground text-sm mt-6">

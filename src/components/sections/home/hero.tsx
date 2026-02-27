@@ -43,9 +43,7 @@ export function Hero() {
             transition={{ delay: 0.2 }}
             className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8"
           >
-            UHNW families and executives face converging threats across borders,
-            cyber, physical, and reputational domains. AMG provides the unified
-            command structure they need.
+            Comprehensive protection for a complex world. Tailored solutions for family offices, ultra-high-net-worth individuals and families, and executive leaders.
           </motion.p>
 
           <motion.div
@@ -55,13 +53,16 @@ export function Hero() {
             className="flex flex-wrap gap-4 justify-center mb-12"
           >
             <Button size="lg" asChild>
+              <a href="#who-we-are">
+                Discover Our Approach
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
               <Link href="/contact">
-                Begin Discovery
+                Schedule a Call
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-            </Button>
-            <Button variant="ghost" size="lg" asChild>
-              <a href="#domains">Explore Our Approach</a>
             </Button>
           </motion.div>
 
