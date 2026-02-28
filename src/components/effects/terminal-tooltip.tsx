@@ -129,7 +129,7 @@ export function TerminalTooltip({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 8 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute z-20 w-80 max-w-[calc(100vw-2rem)] border border-primary/20 bg-[#0a0a0a]/95 backdrop-blur-sm"
+            className="absolute z-20 w-80 max-w-[calc(100vw-2rem)] border border-primary/20 bg-background/95 backdrop-blur-sm"
             style={{ left, top }}
             onClick={(e) => e.stopPropagation()}
           >

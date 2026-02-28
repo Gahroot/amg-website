@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { StarParticles } from "@/components/effects/star-particles";
-import { Spotlight } from "@/components/effects/spotlight";
+import { ThemeEffects } from "@/components/effects/theme-effects";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} antialiased`}
       >
@@ -69,9 +68,8 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <Spotlight fixed />
-          <StarParticles fixed starCount={100} />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <ThemeEffects />
           {children}
         </ThemeProvider>
       </body>

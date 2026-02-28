@@ -82,37 +82,56 @@
   --sidebar-ring: #d4c9a8;
 }
 
+/* Light Theme - Warmer cream tones for journey experience */
 .light {
-  --background: #faf9f6;
-  --foreground: #1a1712;
-  --card: #ffffff;
-  --card-foreground: #1a1712;
-  --popover: #ffffff;
-  --popover-foreground: #1a1712;
+  /* Warmer cream backgrounds */
+  --background: #f5f2eb;
+  --background-alt: #ebe7df;
+  --foreground: #1a1815;
+  --foreground-muted: #4a4540;
+  --card: #faf8f3;
+  --card-foreground: #1a1815;
+  --popover: #faf8f3;
+  --popover-foreground: #1a1815;
+
+  /* Richer gold/brown primary */
   --primary: #8b7d5e;
-  --primary-foreground: #faf9f6;
-  --secondary: #f2efe8;
-  --secondary-foreground: #1a1712;
-  --muted: #f2efe8;
-  --muted-foreground: #6b6355;
-  --accent: #c4b82e;
-  --accent-foreground: #1a1712;
+  --primary-foreground: #faf8f3;
+  --primary-hover: #7a6c4d;
+  --primary-light: #9a8c6c20;
+
+  /* Secondary colors */
+  --secondary: #ddd8ce;
+  --secondary-foreground: #1a1815;
+  --muted: #d9d4ca;
+  --muted-foreground: #6a6558;
+
+  /* Richer accent */
+  --accent: #c4a060;
+  --accent-subtle: #e8dcc8;
+  --accent-foreground: #f5f2eb;
+
+  /* Destructive and borders */
   --destructive: #dc2626;
-  --border: rgba(139, 125, 94, 0.15);
-  --input: rgba(139, 125, 94, 0.2);
+  --border: rgba(139, 125, 94, 0.2);
+  --input: rgba(139, 125, 94, 0.25);
   --ring: #8b7d5e;
+
+  /* Charts */
   --chart-1: #8b7d5e;
-  --chart-2: #c4b82e;
-  --chart-3: #6b6355;
-  --chart-4: #1a1712;
-  --chart-5: #f2efe8;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1a1712;
+  --chart-2: #c4a060;
+  --chart-3: #6a6558;
+  --chart-4: #1a1815;
+  --chart-5: #ddd8ce;
+
+  /* Sidebar */
+  --sidebar: #faf8f3;
+  --sidebar-foreground: #1a1815;
   --sidebar-primary: #8b7d5e;
-  --sidebar-primary-foreground: #faf9f6;
-  --sidebar-accent: #f2efe8;
-  --sidebar-accent-foreground: #1a1712;
-  --sidebar-border: rgba(139, 125, 94, 0.15);
+  --sidebar-primary-foreground: #faf8f3;
+  --sidebar-accent: #ddd8ce;
+  --sidebar-accent-foreground: #1a1815;
+  --sidebar-border: rgba(139, 125, 94, 0.2);
   --sidebar-ring: #8b7d5e;
 }
 
@@ -172,3 +191,138 @@
 }
 .marquee-track { animation: marquee-scroll 20s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+/* Scroll-pin containers for immersive scroll experiences */
+.scroll-pin-container {
+  position: relative;
+}
+.scroll-pin-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-pin-container {
+    height: auto !important;
+  }
+  .scroll-pin-viewport {
+    position: relative;
+    height: auto;
+  }
+}
+
+/* ============================================================================
+ * JOURNEY-SPECIFIC STYLES
+ * ============================================================================ */
+
+/* Journey base styles - force light theme */
+.scroll-journey {
+  background-color: #f5f2eb;
+  color: #1a1815;
+}
+
+/* Journey sections */
+.journey-hero,
+.journey-horizontal-tiles,
+.journey-vertical-timeline,
+.journey-cta {
+  position: relative;
+}
+
+/* Horizontal tiles scroll snap for mobile */
+.journey-tiles-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+.journey-tiles-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.journey-tiles-wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Timeline dot animation */
+@keyframes timeline-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(139, 125, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(139, 125, 94, 0);
+  }
+}
+
+/* Journey navbar progress bar */
+.journey-navbar-progress {
+  transition: width 0.15s ease-out;
+}
+
+/* Active state for timeline stops */
+.timeline-stop.active .timeline-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Loading spinner for journey page */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth scroll behavior for journey */
+.scroll-journey {
+  scroll-behavior: smooth;
+}
+
+/* Override for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-journey {
+    scroll-behavior: auto;
+  }
+
+  /* Disable parallax and pinned scrolling */
+  .journey-horizontal-tiles,
+  .journey-vertical-timeline {
+    height: auto !important;
+  }
+
+  .journey-tiles-wrapper {
+    position: relative !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .journey-tiles {
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .journey-tile {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 50vh !important;
+    scroll-snap-align: unset !important;
+  }
+
+  /* Hide animated elements - disable animations via JS in components */
+}
+
+/* Touch-friendly tap targets for journey */
+.journey-tile button,
+.journey-tile a,
+.timeline-stop button,
+.timeline-stop a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Focus visible styles for journey navigation */
+.journey-tile a:focus-visible,
+.timeline-stop a:focus-visible,
+.journey-cta a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
