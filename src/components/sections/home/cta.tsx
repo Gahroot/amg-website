@@ -49,7 +49,7 @@ export function CTA() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-end justify-center overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
       {/* Background image - storm breaking with light emerging */}
       <div
@@ -67,7 +67,7 @@ export function CTA() {
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 w-full pb-20 pt-40">
+      <div className="relative z-10 w-full py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl tracking-tight text-[#e8e4dc] mb-4">
             Turn Chaos Into Control
