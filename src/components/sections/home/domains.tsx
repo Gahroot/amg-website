@@ -166,30 +166,29 @@ export function Domains() {
 
   return (
     <section ref={sectionRef} id="domains" className="overflow-hidden">
-      {/* Section header */}
-      <div className="py-24 lg:py-32 pb-12 lg:pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-            OUR DOMAINS
-          </p>
-          <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl tracking-tight">
-            Five Domains. One Operating System.
-          </h2>
-        </div>
-      </div>
-
       {canPin ? (
-        /* Desktop: GSAP horizontal scroll */
-        <div ref={trackRef} className="overflow-hidden">
-          <div
-            ref={panelsRef}
-            className="flex flex-nowrap will-change-transform"
-          >
-            {domains.map((domain, index) => (
-              <div
-                key={domain.number}
-                className="w-screen min-h-[80vh] flex-shrink-0 flex items-center"
-              >
+        /* Desktop: GSAP horizontal scroll — header inside pinned container */
+        <div ref={trackRef} className="h-screen overflow-hidden flex flex-col">
+          <div className="pt-24 pb-8 flex-shrink-0">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+                OUR DOMAINS
+              </p>
+              <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl tracking-tight">
+                Five Domains. One Operating System.
+              </h2>
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <div
+              ref={panelsRef}
+              className="flex flex-nowrap h-full will-change-transform"
+            >
+              {domains.map((domain, index) => (
+                <div
+                  key={domain.number}
+                  className="w-screen h-full flex-shrink-0 flex items-center"
+                >
                 <div className="max-w-5xl mx-auto px-8 relative">
                   <span
                     className="font-serif italic text-[10rem] text-primary/10 absolute -top-24 -left-4 select-none pointer-events-none leading-none"
@@ -223,11 +222,20 @@ export function Domains() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       ) : (
         /* Mobile: vertical stacked cards */
         <div className="px-4 sm:px-6 lg:px-8 pb-24 lg:pb-32">
+          <div className="max-w-7xl mx-auto mb-12">
+            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+              OUR DOMAINS
+            </p>
+            <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl tracking-tight">
+              Five Domains. One Operating System.
+            </h2>
+          </div>
           <div className="max-w-7xl mx-auto">
             {domains.map((domain, index) => (
               <div
