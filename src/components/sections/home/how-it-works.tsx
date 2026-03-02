@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useSyncExternalStore } from "react";
+import Image from "next/image";
 import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
 
 /* ------------------------------------------------------------------ */
@@ -222,12 +223,16 @@ export function HowItWorks() {
 
           {/* Two-column grid (desktop) or single column (mobile) */}
           <div className={canPin ? "grid grid-cols-2 gap-16" : ""}>
-            {/* Image placeholder */}
+            {/* Compass image */}
             <div className={canPin ? "relative" : "mb-12"}>
-              <div
-                ref={imageRef}
-                className="aspect-[3/4] rounded-sm bg-gradient-to-b from-[#c4bfb5] to-[#8a8578]"
-              />
+              <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
+                <Image
+                  src="/images/compass.jpg"
+                  alt="Antique compass pointing north — symbol of decisive direction through complexity"
+                  fill
+                  className="object-cover"
+                />
+              </div>
             </div>
 
             {/* Numbered steps */}

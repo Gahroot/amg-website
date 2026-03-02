@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
@@ -50,12 +51,20 @@ export function CTA() {
       ref={sectionRef}
       className="relative min-h-screen flex items-end justify-center overflow-hidden"
     >
-      {/* Background gradient (yacht placeholder) */}
+      {/* Background image - storm breaking with light emerging */}
       <div
         ref={bgRef}
-        className="absolute inset-0 -top-16 bg-gradient-to-b from-[#c4bfb5] via-[#8a8578] to-[#1a1714]"
+        className="absolute inset-0 -top-16"
         aria-hidden="true"
-      />
+      >
+        <Image
+          src="/images/sun come through clouids.jpg"
+          alt="Storm clouds parting to reveal golden light — chaos turning into clarity"
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
 
       {/* Content overlay */}
       <div className="relative z-10 w-full pb-20 pt-40">

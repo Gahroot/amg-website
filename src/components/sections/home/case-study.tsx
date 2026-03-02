@@ -75,7 +75,7 @@ export function CaseStudy() {
         scrollTrigger: {
           trigger: section,
           start: "top 60%",
-          end: "bottom 70%",
+          end: "+=80%",
           scrub: 0.6,
         },
       });

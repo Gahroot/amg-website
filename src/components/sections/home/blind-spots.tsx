@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { gsap, ScrollTrigger, SplitText, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function BlindSpots() {
@@ -68,12 +69,16 @@ export function BlindSpots() {
     <section ref={sectionRef} className="py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left column: B&W image placeholder */}
+          {/* Left column: fog image */}
           <div className="overflow-hidden rounded-sm">
-            <div
-              ref={imageRef}
-              className="bg-gradient-to-b from-[#8a8578] to-[#4a4540] aspect-[3/4] rounded-sm"
-            />
+            <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
+              <Image
+                src="/images/fog.png"
+                alt="Light emerging through fog — revealing what was hidden in blind spots"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
 
           {/* Right column: body text */}

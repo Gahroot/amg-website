@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
@@ -53,22 +53,19 @@ export function Hero() {
         1.0
       );
 
-      // Image rises
-      tl.fromTo(
-        ".hero-image",
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8 },
-        0.6
-      );
-
-      // Parallax on image during scroll
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: 0.5,
-        animation: gsap.to(".hero-image", { y: -150, ease: "none" }),
-      });
+      // Fade background as hero scrolls out of view
+      if (bgRef.current) {
+        gsap.to(bgRef.current, {
+          opacity: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      }
     },
     { scope: sectionRef }
   );
@@ -76,45 +73,48 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col justify-center pt-20 pb-12 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center lg:justify-end overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        {/* Wordmark */}
-        <h1 className="hero-wordmark font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] tracking-tight leading-[0.9] text-foreground mb-6">
+      {/* Fixed Background Video for parallax effect */}
+      <div ref={bgRef} className="fixed inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videos/vecteezy_aerial-shot-a-dramatic-coastline-with-rugged-cliffs-and_48207478.mov" />
+        </video>
+      </div>
+
+      {/* Dark gradient overlay - progressively darker toward the right */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/50 to-black/70 z-10" />
+
+      {/* Text Content - centered mobile, right-aligned desktop */}
+      <div className="relative z-20 w-full px-4 sm:px-6 lg:px-8 lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:pr-8 lg:pl-16 lg:w-1/2">
+        <h1 className="hero-wordmark font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] tracking-tight leading-[0.9] text-white mb-6">
           Anchor
           <br />
           Mill Group
         </h1>
 
         {/* Thin rule */}
-        <div className="hero-rule h-px w-full max-w-md bg-foreground/20 origin-left mb-6" />
+        <div className="hero-rule h-px w-full max-w-md bg-white/30 origin-left mb-6" />
 
         {/* Tagline */}
-        <p className="hero-tagline font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-muted-foreground mb-8 max-w-xl">
+        <p className="hero-tagline font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-white/80 mb-8 max-w-xl">
           Integrated Resilience, Protection, and Performance
         </p>
 
         {/* CTA */}
         <Link
           href="/contact"
-          className="hero-cta inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-foreground hover:text-primary transition-colors group"
+          className="hero-cta inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-white hover:text-primary transition-colors group"
         >
           Begin a Conversation
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
         </Link>
-      </div>
-
-      {/* Hero image */}
-      <div className="hero-image mt-12 lg:mt-16 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative w-full aspect-[21/9] rounded-sm overflow-hidden">
-          <Image
-            src="/images/hero-lighthouse.jpg"
-            alt="Lighthouse standing firm against stormy skies — a symbol of guidance through chaos"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
       </div>
     </section>
   );
