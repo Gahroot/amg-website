@@ -1,22 +1,81 @@
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+"use client";
+
+import { useRef } from "react";
+import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function StrategiesHero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+
+  useGSAP(
+    () => {
+      if (typeof window === "undefined") return;
+
+      initGSAP();
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (reducedMotion) return;
+
+      const items = itemRefs.current.filter(Boolean) as HTMLElement[];
+      if (items.length === 0) return;
+
+      gsap.fromTo(
+        items,
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.12,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
+
+      return () => {
+        ScrollTrigger.getAll().forEach((st) => {
+          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
+        });
+      };
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
+
   return (
-    <section className="pt-32 py-24 lg:py-32">
+    <section ref={sectionRef} className="pt-32 py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimateOnScroll>
-          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-            OUR APPROACH
-          </p>
-          <h1 className="font-mono text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-foreground mb-6">
-            SOVEREIGN GLOBAL ECOSYSTEM
-          </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl">
-            Five specialized domains — unified under one strategic command layer
-            — delivering comprehensive protection, optimized performance, and
-            lasting resilience for UHNW families and global executives.
-          </p>
-        </AnimateOnScroll>
+        <p
+          ref={(el) => {
+            itemRefs.current[0] = el;
+          }}
+          className="font-mono text-xs uppercase tracking-widest text-primary mb-4"
+        >
+          Our Approach
+        </p>
+        <h1
+          ref={(el) => {
+            itemRefs.current[1] = el;
+          }}
+          className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-foreground mb-6"
+        >
+          Sovereign Global Ecosystem
+        </h1>
+        <p
+          ref={(el) => {
+            itemRefs.current[2] = el;
+          }}
+          className="text-lg sm:text-xl text-muted-foreground max-w-3xl"
+        >
+          Five specialized domains — unified under one strategic command layer
+          — delivering comprehensive protection, optimized performance, and
+          lasting resilience for UHNW families and global executives.
+        </p>
       </div>
     </section>
   );

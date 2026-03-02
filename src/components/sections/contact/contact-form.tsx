@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { z } from "zod";
 import { ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
 import { siteConfig } from "@/lib/site-config";
 
 const contactSchema = z.object({
@@ -32,6 +32,83 @@ export function ContactForm() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (typeof window === "undefined") return;
+
+      initGSAP();
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (reducedMotion) return;
+
+      if (submitted) {
+        // Simple fade-up for the success state
+        if (leftRef.current) {
+          gsap.fromTo(
+            leftRef.current,
+            { y: 20, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: "power2.out",
+            }
+          );
+        }
+        return;
+      }
+
+      if (leftRef.current) {
+        gsap.fromTo(
+          leftRef.current,
+          { x: -30, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      if (rightRef.current) {
+        gsap.fromTo(
+          rightRef.current,
+          { x: 30, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      return () => {
+        ScrollTrigger.getAll().forEach((st) => {
+          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
+        });
+      };
+    },
+    { scope: sectionRef, dependencies: [submitted] }
+  );
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -64,81 +141,77 @@ export function ContactForm() {
 
   if (submitted) {
     return (
-      <section className="py-24 lg:py-32">
+      <section ref={sectionRef} className="py-24 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimateOnScroll>
-            <div className="text-center max-w-2xl mx-auto">
-              <div className="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 mb-6">
-                <Mail className="size-8 text-primary" />
-              </div>
-              <h2 className="font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight mb-4">
-                THANK YOU
-              </h2>
-              <p className="text-muted-foreground text-lg mb-8">
-                Your message has been received. We respond within 24 hours to
-                all inquiries. A member of our team will reach out to begin your
-                confidential discovery.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSubmitted(false);
-                  setFormData({
-                    name: "",
-                    organization: "",
-                    email: "",
-                    phone: "",
-                    message: "",
-                  });
-                  setErrors({});
-                }}
-              >
-                Send Another Message
-              </Button>
+          <div ref={leftRef} className="text-center max-w-2xl mx-auto">
+            <div className="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 mb-6">
+              <Mail className="size-8 text-primary" />
             </div>
-          </AnimateOnScroll>
+            <h2 className="font-serif text-2xl sm:text-3xl tracking-tight mb-4">
+              Thank You
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8">
+              Your message has been received. We respond within 24 hours to
+              all inquiries. A member of our team will reach out to begin your
+              confidential discovery.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSubmitted(false);
+                setFormData({
+                  name: "",
+                  organization: "",
+                  email: "",
+                  phone: "",
+                  message: "",
+                });
+                setErrors({});
+              }}
+            >
+              Send Another Message
+            </Button>
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24">
+    <section ref={sectionRef} className="py-12 sm:py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24">
           {/* Left column — info */}
-          <AnimateOnScroll>
-            <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-                GET IN TOUCH
-              </p>
-              <h1 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold uppercase tracking-tight mb-6">
-                BEGIN YOUR CONFIDENTIAL DISCOVERY
-              </h1>
-              <p className="text-muted-foreground text-lg mb-8">
-                Every engagement begins with a private, no-obligation discovery
-                session. Tell us about your situation &mdash; we&apos;ll show
-                you what integrated protection looks like.
-              </p>
-              <a
-                href={`mailto:${siteConfig.email}`}
-                className="inline-flex items-center gap-3 text-foreground hover:text-primary transition-colors group"
-              >
-                <span className="inline-flex items-center justify-center size-10 rounded-full border border-border group-hover:border-primary transition-colors">
-                  <Mail className="size-4" />
-                </span>
-                <span className="font-mono text-sm">
-                  {siteConfig.email}
-                </span>
-              </a>
-              <p className="text-muted-foreground text-sm mt-6">
-                We respond within 24 hours to all inquiries.
-              </p>
-            </div>
-          </AnimateOnScroll>
+          <div ref={leftRef}>
+            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+              Get in Touch
+            </p>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl tracking-tight mb-6">
+              Begin Your Confidential Discovery
+            </h1>
+            <p className="text-muted-foreground text-lg mb-8">
+              Every engagement begins with a private, no-obligation discovery
+              session. Tell us about your situation &mdash; we&apos;ll show
+              you what integrated protection looks like.
+            </p>
+            <a
+              href={`mailto:${siteConfig.email}`}
+              className="inline-flex items-center gap-3 text-foreground hover:text-primary transition-colors group"
+            >
+              <span className="inline-flex items-center justify-center size-10 rounded-full border border-border group-hover:border-primary transition-colors">
+                <Mail className="size-4" />
+              </span>
+              <span className="font-mono text-sm">
+                {siteConfig.email}
+              </span>
+            </a>
+            <p className="text-muted-foreground text-sm mt-6">
+              We respond within 24 hours to all inquiries.
+            </p>
+          </div>
 
           {/* Right column — form */}
-          <AnimateOnScroll delay={0.1}>
+          <div ref={rightRef}>
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-mono text-xs uppercase tracking-widest">
@@ -234,7 +307,7 @@ export function ContactForm() {
                 <ArrowRight className="size-4" />
               </Button>
             </form>
-          </AnimateOnScroll>
+          </div>
         </div>
       </div>
     </section>

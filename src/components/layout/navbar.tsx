@@ -6,60 +6,62 @@ import { OverlayNav } from "./overlay-nav";
 
 export function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
-  // Initialize with reduced motion check (assumes client-side)
-  const [isSolid, setIsSolid] = useState(
-    typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
+  const [isSolid, setIsSolid] = useState(true);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Check for reduced motion preference
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (reducedMotion) {
-      return;
-    }
+    if (reducedMotion) return;
 
-    const setSolidFromIntersection = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        setIsSolid(!entry.isIntersecting);
-      });
-    };
+    let observer: IntersectionObserver | null = null;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
-    // Find the hero section (first section in main)
-    const findHeroSection = () => {
-      const main = document.querySelector("main");
-      return main?.querySelector("section:first-child") as HTMLElement;
-    };
-
-    // Use IntersectionObserver to detect when leaving hero
-    const observer = new IntersectionObserver(setSolidFromIntersection, {
-      // Trigger when hero has scrolled 50% out of view
-      threshold: 0,
-      rootMargin: "-100px 0px 0px 0px",
-    });
-
-    // Wait for DOM to be ready, then observe
     const startObserving = () => {
-      const hero = findHeroSection();
-      if (hero) {
-        observer.observe(hero);
-      }
+      // Already observing — skip
+      if (observer) return;
+
+      const main = document.querySelector("main");
+      const hero = main?.querySelector(
+        "section:first-child"
+      ) as HTMLElement | null;
+
+      if (!hero) return;
+
+      // Only observe full-viewport heroes (e.g. home page video hero)
+      const isFullViewportHero =
+        hero.classList.contains("min-h-screen") ||
+        hero.offsetHeight >= window.innerHeight * 0.9;
+
+      if (!isFullViewportHero) return;
+
+      // Full-viewport hero found — start transparent and observe
+      setIsSolid(false);
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            setIsSolid(!entry.isIntersecting);
+          });
+        },
+        {
+          threshold: 0,
+          rootMargin: "-100px 0px 0px 0px",
+        }
+      );
+
+      observer.observe(hero);
     };
 
-    // Try immediately and also after a short delay for dynamic content
+    // Try immediately and with delays for dynamic content / preloader
     startObserving();
-    const timeoutId = setTimeout(startObserving, 100);
-
-    // Also observe after preloader likely completes
-    const preloaderTimeout = setTimeout(startObserving, 500);
+    timeouts.push(setTimeout(startObserving, 100));
+    timeouts.push(setTimeout(startObserving, 500));
 
     return () => {
-      observer.disconnect();
-      clearTimeout(timeoutId);
-      clearTimeout(preloaderTimeout);
+      observer?.disconnect();
+      timeouts.forEach(clearTimeout);
     };
   }, []);
 

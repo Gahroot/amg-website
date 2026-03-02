@@ -1,9 +1,11 @@
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
-import { Card, CardContent } from "@/components/ui/card";
+"use client";
+
+import { useRef } from "react";
+import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
 
 const caseStudies = [
   {
-    title: "STABILIZING A FAMILY OFFICE",
+    title: "Stabilizing a Family Office",
     client: "$680M AUM family office",
     metrics: [
       "Security score improved from 34 to 87",
@@ -14,7 +16,7 @@ const caseStudies = [
       "A multi-generational family office was hemorrhaging value through uncoordinated advisors and escalating internal conflicts. AMG deployed an integrated discovery across all five domains, revealing critical interdependencies between their cybersecurity gaps, governance dysfunction, and leadership succession failures. Within 12 months, the family had a unified protection architecture and a clear path forward.",
   },
   {
-    title: "CRISIS CONTAINMENT",
+    title: "Crisis Containment",
     client: "$200M Series C founder",
     metrics: [
       "Coordinated threat neutralized in 72 hours",
@@ -22,10 +24,10 @@ const caseStudies = [
       "Zero public exposure of incident",
     ],
     narrative:
-      "A high-profile founder faced a coordinated threat combining cyber intrusion, physical surveillance, and reputational attack — timed to derail a critical acquisition. AMG activated cross-domain response protocols, coordinating cyber forensics, executive protection, legal strategy, and media containment simultaneously. The threat was neutralized, the acquisition closed on schedule, and the incident never became public.",
+      "A high-profile founder faced a coordinated threat combining cyber intrusion, physical surveillance, and reputational attack \u2014 timed to derail a critical acquisition. AMG activated cross-domain response protocols, coordinating cyber forensics, executive protection, legal strategy, and media containment simultaneously. The threat was neutralized, the acquisition closed on schedule, and the incident never became public.",
   },
   {
-    title: "FULL SPECTRUM PROTECTION",
+    title: "Full Spectrum Protection",
     client: "Fortune 100 C-suite executive",
     metrics: [
       "Zero cyber or physical incidents",
@@ -38,48 +40,97 @@ const caseStudies = [
 ];
 
 export function CaseStudies() {
-  return (
-    <section className="py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimateOnScroll>
-          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-            PROVEN RESULTS
-          </p>
-          <h2 className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight mb-12">
-            CASE STUDIES
-          </h2>
-        </AnimateOnScroll>
+  const sectionRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {caseStudies.map((study, index) => (
-            <AnimateOnScroll key={study.title} delay={index * 0.1}>
-              <Card className="bg-card border-border overflow-hidden h-full">
-                <div className="h-1 bg-primary w-full" />
-                <CardContent className="pt-6">
-                  <h3 className="font-mono text-lg font-bold uppercase tracking-tight text-foreground mb-2">
+  useGSAP(
+    () => {
+      if (typeof window === "undefined") return;
+
+      initGSAP();
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (reducedMotion) return;
+
+      const items = itemRefs.current.filter(Boolean) as HTMLDivElement[];
+      if (items.length === 0) return;
+
+      gsap.fromTo(
+        items,
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 75%",
+            once: true,
+          },
+        }
+      );
+
+      return () => {
+        ScrollTrigger.getAll().forEach((st) => {
+          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
+        });
+      };
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
+
+  return (
+    <section ref={sectionRef} className="py-24 lg:py-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+          Proven Results
+        </p>
+        <h2 className="font-serif text-3xl md:text-4xl tracking-tight mb-16">
+          Case Studies
+        </h2>
+
+        <div className="space-y-0">
+          {caseStudies.map((study, i) => (
+            <div
+              key={study.title}
+              ref={(el) => {
+                itemRefs.current[i] = el;
+              }}
+              className="border-t border-[rgba(26,23,20,0.15)] pt-8 mb-12 last:mb-0"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: title + metrics */}
+                <div>
+                  <h3 className="font-serif text-xl sm:text-2xl tracking-tight mb-2">
                     {study.title}
                   </h3>
                   <p className="font-mono text-xs uppercase tracking-widest text-primary mb-6">
                     {study.client}
                   </p>
-                  <div className="grid grid-cols-1 gap-3 mb-6">
+                  <ul className="space-y-3">
                     {study.metrics.map((metric) => (
-                      <div
-                        key={metric}
-                        className="bg-primary/5 border border-primary/10 rounded-lg px-4 py-3"
-                      >
-                        <p className="font-mono text-sm font-medium text-foreground">
+                      <li key={metric} className="flex items-start gap-3">
+                        <span className="mt-2 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">
                           {metric}
-                        </p>
-                      </div>
+                        </span>
+                      </li>
                     ))}
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  </ul>
+                </div>
+
+                {/* Right: narrative */}
+                <div className="lg:col-span-2">
+                  <p className="text-muted-foreground leading-relaxed">
                     {study.narrative}
                   </p>
-                </CardContent>
-              </Card>
-            </AnimateOnScroll>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

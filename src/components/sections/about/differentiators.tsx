@@ -1,66 +1,171 @@
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+"use client";
 
-const differentiators = [
+import { useRef } from "react";
+import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+
+const leftItems = [
   {
     symbol: "\u2295",
-    title: "INTEGRATION OVER ISOLATION",
+    title: "Integration Over Isolation",
     description:
       "Where others provide point solutions, we provide a unified operating system.",
   },
   {
-    symbol: "\u25CE",
-    title: "WORLD-CLASS PRACTITIONERS",
-    description:
-      "Every partner is a recognized leader in their field — former intelligence officers, Yale physicians, Fortune 100 coaches.",
-  },
-  {
     symbol: "\u2B22",
-    title: "ABSOLUTE DISCRETION",
+    title: "Absolute Discretion",
     description:
       "We serve clients who cannot afford public exposure. Confidentiality is foundational, not aspirational.",
   },
+];
+
+const rightItems = [
+  {
+    symbol: "\u25CE",
+    title: "World-Class Practitioners",
+    description:
+      "Every partner is a recognized leader in their field \u2014 former intelligence officers, Yale physicians, Fortune 100 coaches.",
+  },
   {
     symbol: "\u25C8",
-    title: "ADAPTIVE METHODOLOGY",
+    title: "Adaptive Methodology",
     description:
       "Our framework evolves with your threats, your family, and your enterprise.",
   },
 ];
 
 export function Differentiators() {
-  return (
-    <section className="py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimateOnScroll>
-          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-            WHY AMG
-          </p>
-          <h2 className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight mb-4">
-            WHAT SETS AMG APART
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            Four principles that define every engagement.
-          </p>
-        </AnimateOnScroll>
+  const sectionRef = useRef<HTMLElement>(null);
+  const leftRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rightRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {differentiators.map((item, index) => (
-            <AnimateOnScroll key={item.title} delay={index * 0.1}>
-              <div className="flex items-start gap-5 border border-border rounded-lg p-6 bg-card">
-                <span className="text-2xl text-primary flex-shrink-0 mt-1">
-                  {item.symbol}
-                </span>
-                <div>
-                  <h3 className="font-mono text-lg font-semibold uppercase tracking-tight mb-2 text-foreground">
+  useGSAP(
+    () => {
+      if (typeof window === "undefined") return;
+
+      initGSAP();
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (reducedMotion) return;
+
+      const lefts = leftRefs.current.filter(Boolean) as HTMLDivElement[];
+      const rights = rightRefs.current.filter(Boolean) as HTMLDivElement[];
+
+      if (lefts.length > 0) {
+        gsap.fromTo(
+          lefts,
+          { x: -30, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 70%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      if (rights.length > 0) {
+        gsap.fromTo(
+          rights,
+          { x: 30, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 70%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      return () => {
+        ScrollTrigger.getAll().forEach((st) => {
+          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
+        });
+      };
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
+
+  return (
+    <section ref={sectionRef} className="py-24 lg:py-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+          Why AMG
+        </p>
+        <h2 className="font-serif text-3xl md:text-4xl tracking-tight mb-2">
+          What Sets AMG Apart
+        </h2>
+        <p className="text-muted-foreground mb-16">
+          Four principles that define every engagement.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          {/* Left column */}
+          <div>
+            <h3 className="font-mono text-xs uppercase tracking-widest text-foreground mb-8 border-b border-border pb-4">
+              Core Principles
+            </h3>
+            <div className="space-y-10">
+              {leftItems.map((item, i) => (
+                <div
+                  key={item.title}
+                  ref={(el) => {
+                    leftRefs.current[i] = el;
+                  }}
+                >
+                  <span className="text-2xl text-primary leading-none">
+                    {item.symbol}
+                  </span>
+                  <h4 className="font-mono text-sm uppercase tracking-widest text-foreground mt-3 mb-2">
                     {item.title}
-                  </h3>
-                  <p className="text-muted-foreground max-w-xl">
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {item.description}
                   </p>
                 </div>
-              </div>
-            </AnimateOnScroll>
-          ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div>
+            <h3 className="font-mono text-xs uppercase tracking-widest text-foreground mb-8 border-b border-border pb-4">
+              Our Edge
+            </h3>
+            <div className="space-y-10">
+              {rightItems.map((item, i) => (
+                <div
+                  key={item.title}
+                  ref={(el) => {
+                    rightRefs.current[i] = el;
+                  }}
+                >
+                  <span className="text-2xl text-primary leading-none">
+                    {item.symbol}
+                  </span>
+                  <h4 className="font-mono text-sm uppercase tracking-widest text-foreground mt-3 mb-2">
+                    {item.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

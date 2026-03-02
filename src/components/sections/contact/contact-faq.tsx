@@ -1,12 +1,13 @@
 "use client";
 
+import { useRef } from "react";
+import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 
 const faqs = [
   {
@@ -42,23 +43,69 @@ const faqs = [
 ];
 
 export function ContactFAQ() {
-  return (
-    <section className="py-24 lg:py-32 bg-card/50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimateOnScroll>
-          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-            FREQUENTLY ASKED QUESTIONS
-          </p>
-          <h2 className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight mb-12">
-            COMMON QUESTIONS
-          </h2>
-        </AnimateOnScroll>
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const accordionRef = useRef<HTMLDivElement>(null);
 
-        <AnimateOnScroll delay={0.1}>
+  useGSAP(
+    () => {
+      if (typeof window === "undefined") return;
+
+      initGSAP();
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (reducedMotion) return;
+
+      const targets = [headerRef.current, accordionRef.current].filter(
+        Boolean
+      ) as HTMLElement[];
+      if (targets.length === 0) return;
+
+      gsap.fromTo(
+        targets,
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
+
+      return () => {
+        ScrollTrigger.getAll().forEach((st) => {
+          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
+        });
+      };
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
+
+  return (
+    <section ref={sectionRef} className="py-24 lg:py-32 bg-card/50">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div ref={headerRef}>
+          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
+            Frequently Asked Questions
+          </p>
+          <h2 className="font-serif text-3xl md:text-4xl tracking-tight mb-12">
+            Common Questions
+          </h2>
+        </div>
+
+        <div ref={accordionRef}>
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`faq-${index}`}>
-                <AccordionTrigger className="text-base font-medium text-left">
+                <AccordionTrigger className="font-serif text-lg text-left">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
@@ -67,7 +114,7 @@ export function ContactFAQ() {
               </AccordionItem>
             ))}
           </Accordion>
-        </AnimateOnScroll>
+        </div>
       </div>
     </section>
   );
