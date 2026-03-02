@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
@@ -65,8 +66,8 @@ export function Hero() {
         trigger: sectionRef.current,
         start: "top top",
         end: "bottom top",
-        scrub: 1,
-        animation: gsap.to(".hero-image", { y: -60, ease: "none" }),
+        scrub: 0.5,
+        animation: gsap.to(".hero-image", { y: -150, ease: "none" }),
       });
     },
     { scope: sectionRef }
@@ -103,9 +104,17 @@ export function Hero() {
         </Link>
       </div>
 
-      {/* Botanical image placeholder */}
+      {/* Hero image */}
       <div className="hero-image mt-12 lg:mt-16 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="w-full aspect-[21/9] rounded-sm bg-gradient-to-br from-[#c4bfb5] via-[#a89f8f] to-[#7a7265] opacity-80" />
+        <div className="relative w-full aspect-[21/9] rounded-sm overflow-hidden">
+          <Image
+            src="/images/hero-lighthouse.jpg"
+            alt="Lighthouse standing firm against stormy skies — a symbol of guidance through chaos"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
       </div>
     </section>
   );
