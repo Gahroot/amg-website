@@ -7,7 +7,6 @@
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 
@@ -23,11 +22,9 @@ let initialized = false;
 export function initGSAP(): void {
   if (!isClient || initialized) return;
 
-  console.log("[AMG:gsap] Registering GSAP plugins...");
-  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, SplitText, useGSAP);
+  gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
   ScrollTrigger.config({ ignoreMobileResize: true });
   initialized = true;
-  console.log("[AMG:gsap] GSAP initialized. ScrollTrigger version:", ScrollTrigger.version);
 }
 
 /**
@@ -41,37 +38,5 @@ export function getGSAP() {
   return gsap;
 }
 
-/**
- * Refresh all ScrollTrigger instances
- * Useful after dynamic content changes or hydration
- */
-export function refreshScrollTriggers(): void {
-  if (!isClient || !initialized) return;
-  ScrollTrigger.refresh();
-}
-
-/**
- * Kill all ScrollTrigger instances
- * Useful for cleanup before route changes
- */
-export function killScrollTriggers(): void {
-  if (!isClient || !initialized) return;
-  ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-}
-
-/**
- * Create a GSAP context for easy cleanup
- * Returns a context that can be reverted
- */
-export function createGSAPContext(
-  callback: (context: gsap.Context) => void
-): gsap.Context | null {
-  if (!isClient) return null;
-  return gsap.context(callback);
-}
-
 // Export GSAP and plugins for direct use
-export { gsap, ScrollTrigger, ScrollToPlugin, SplitText, useGSAP };
-
-// Default export for convenience
-export default getGSAP;
+export { gsap, ScrollTrigger, SplitText, useGSAP };

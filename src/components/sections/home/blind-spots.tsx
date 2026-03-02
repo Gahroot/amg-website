@@ -19,9 +19,10 @@ export function BlindSpots() {
       ).matches;
 
       if (prefersReducedMotion) return;
+      if (!bodyRef.current || !imageRef.current) return;
 
       // SplitText word-by-word scrub reveal on body paragraph
-      const split = SplitText.create(bodyRef.current!, {
+      const split = SplitText.create(bodyRef.current, {
         type: "words",
       });
 
@@ -32,7 +33,7 @@ export function BlindSpots() {
         stagger: 0.05,
         ease: "none",
         scrollTrigger: {
-          trigger: bodyRef.current!,
+          trigger: bodyRef.current,
           start: "top 80%",
           end: "bottom 40%",
           scrub: true,
@@ -41,13 +42,13 @@ export function BlindSpots() {
 
       // Image parallax via ScrollTrigger
       gsap.fromTo(
-        imageRef.current!,
+        imageRef.current,
         { y: 50 },
         {
           y: 0,
           ease: "none",
           scrollTrigger: {
-            trigger: imageRef.current!,
+            trigger: imageRef.current,
             start: "top bottom",
             end: "bottom top",
             scrub: true,

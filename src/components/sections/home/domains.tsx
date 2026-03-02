@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useSyncExternalStore } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const domains = [
   {
@@ -102,29 +102,14 @@ export function Domains() {
 
   useGSAP(
     () => {
-      console.log("[AMG:domains] useGSAP callback fired. canPin:", canPin);
-
-      if (!canPin || !trackRef.current || !panelsRef.current) {
-        console.log("[AMG:domains] Skipping —", { canPin, track: !!trackRef.current, panels: !!panelsRef.current });
-        return;
-      }
+      if (!canPin || !trackRef.current || !panelsRef.current) return;
 
       initGSAP();
 
       const panels = panelsRef.current;
       const scrollDistance = panels.scrollWidth - window.innerWidth;
-      console.log("[AMG:domains] Measurements:", {
-        scrollWidth: panels.scrollWidth,
-        windowWidth: window.innerWidth,
-        scrollDistance,
-        trackOffsetTop: trackRef.current.offsetTop,
-        trackBoundingTop: trackRef.current.getBoundingClientRect().top,
-      });
 
-      if (scrollDistance <= 0) {
-        console.warn("[AMG:domains] scrollDistance <= 0, aborting");
-        return;
-      }
+      if (scrollDistance <= 0) return;
 
       const tween = gsap.to(panels, {
         x: -scrollDistance,
@@ -136,27 +121,10 @@ export function Domains() {
           scrub: 1,
           pin: true,
           invalidateOnRefresh: true,
-          onToggle: (self) => {
-            console.log("[AMG:domains] ScrollTrigger toggled:", { isActive: self.isActive, direction: self.direction, progress: self.progress?.toFixed(3) });
-          },
-          onUpdate: (self) => {
-            if (Math.round(self.progress * 100) % 25 === 0) {
-              console.log("[AMG:domains] ScrollTrigger progress:", self.progress?.toFixed(3));
-            }
-          },
         },
       });
 
-      console.log("[AMG:domains] Tween created. ScrollTrigger:", {
-        exists: !!tween.scrollTrigger,
-        start: tween.scrollTrigger?.start,
-        end: tween.scrollTrigger?.end,
-        pin: !!tween.scrollTrigger?.pin,
-      });
-      console.log("[AMG:domains] Total ScrollTriggers now:", ScrollTrigger.getAll().length);
-
       return () => {
-        console.log("[AMG:domains] Cleanup — killing tween + scrollTrigger");
         tween.scrollTrigger?.kill();
         tween.kill();
       };

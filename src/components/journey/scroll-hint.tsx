@@ -114,28 +114,3 @@ export function ScrollHint({
     </div>
   );
 }
-
-// Add animation keyframes via style element
-// In production, these would be in globals.css
-const styleElement = document.createElement("style");
-styleElement.textContent = `
-  @keyframes scroll-bob {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(8px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .scroll-hint-icon {
-      animation: none !important;
-    }
-  }
-}`;
-
-// Only inject on client
-if (typeof document !== "undefined") {
-  document.head.appendChild(styleElement);
-}

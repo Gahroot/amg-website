@@ -24,13 +24,10 @@ export function Preloader({ onComplete }: PreloaderProps) {
     () => {
       if (!containerRef.current) return;
 
-      console.log("[AMG:preloader] Starting logo reveal animation");
-
       initGSAP();
 
       const tl = gsap.timeline({
         onComplete: () => {
-          console.log("[AMG:preloader] Animation complete, showing content");
           document.body.style.overflow = "";
           onComplete();
         },

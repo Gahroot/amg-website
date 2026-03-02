@@ -41,13 +41,12 @@ export function NavbarAutohide({
   const navbarRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
     if (!navbarRef.current) return;
 
     const navbar = navbarRef.current;
-    const ctx = gsapInstance.context(() => {}, navbar);
-
     let isScrollingDown = false;
 
     const handleScroll = () => {
@@ -66,16 +65,17 @@ export function NavbarAutohide({
 
       // Debounce the actual hide/show action
       scrollTimeoutRef.current = setTimeout(() => {
+        tweenRef.current?.kill();
         if (isScrollingDown && currentScrollY > 100) {
           // Scrolling down - hide navbar
-          gsapInstance.to(navbar, {
+          tweenRef.current = gsapInstance.to(navbar, {
             y: -100,
             duration: 0.4,
             ease: "power2.inOut",
           });
         } else if (!isScrollingDown) {
           // Scrolling up - show navbar
-          gsapInstance.to(navbar, {
+          tweenRef.current = gsapInstance.to(navbar, {
             y: 0,
             duration: 0.4,
             ease: "power2.inOut",
@@ -94,9 +94,30 @@ export function NavbarAutohide({
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-      ctx.revert();
+      tweenRef.current?.kill();
     };
   }, [gsapInstance, isMobile]);
+
+  // Progress bar scroll listener
+  useEffect(() => {
+    const progressBar = document.getElementById("journey-progress-bar");
+    if (!progressBar) return;
+
+    const updateProgress = () => {
+      const scrollPercent =
+        (window.scrollY /
+          (document.documentElement.scrollHeight - window.innerHeight)) *
+        100;
+      progressBar.style.width = Math.min(scrollPercent, 100) + "%";
+    };
+
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+
+    return () => {
+      window.removeEventListener("scroll", updateProgress);
+    };
+  }, []);
 
   return (
     <header
@@ -148,25 +169,6 @@ export function NavbarAutohide({
         />
       </div>
 
-      {/* Script to update progress bar */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              const progressBar = document.getElementById('journey-progress-bar');
-              if (!progressBar) return;
-
-              function updateProgress() {
-                const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-                progressBar.style.width = Math.min(scrollPercent, 100) + '%';
-              }
-
-              window.addEventListener('scroll', updateProgress, { passive: true });
-              updateProgress();
-            })();
-          `,
-        }}
-      />
     </header>
   );
 }

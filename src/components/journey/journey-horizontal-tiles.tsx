@@ -69,18 +69,11 @@ export function JourneyHorizontalTiles({
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       if (mobile || reducedMotion) {
-        console.log("Horizontal tiles: Using mobile/reduced motion mode");
         return;
       }
 
-      console.log("Setting up horizontal scroll animation");
-
-      // Clean up any existing ScrollTriggers
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-
       // Calculate horizontal scroll distance
       const scrollDistance = tiles.scrollWidth - window.innerWidth;
-      console.log("Scroll distance:", scrollDistance);
 
       // Create a GSAP context for this component
       const ctx = gsap.context(() => {
@@ -112,9 +105,6 @@ export function JourneyHorizontalTiles({
       if (container) {
         const ctx = (container as unknown as { _gsapContext?: gsap.Context })._gsapContext;
         if (ctx) ctx.revert();
-      }
-      if (ScrollTriggerInstance) {
-        ScrollTriggerInstance.getAll().forEach((trigger) => trigger.kill());
       }
     };
   }, [isClient]);

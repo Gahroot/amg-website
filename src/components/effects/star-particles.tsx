@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
-import { motion } from "motion/react";
+import { useMemo, useRef, useSyncExternalStore } from "react";
+import { motion, useInView } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface StarParticlesProps {
@@ -55,6 +55,8 @@ export function StarParticles({
   fixed = false,
 }: StarParticlesProps) {
   const stars = useMemo(() => generateStars(starCount), [starCount]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: false, margin: "100px" });
 
   const reducedMotion = useSyncExternalStore(
     (cb) => {
@@ -68,6 +70,7 @@ export function StarParticles({
 
   return (
     <div
+      ref={containerRef}
       aria-hidden="true"
       className={cn(
         fixed ? "fixed inset-0 z-0" : "absolute inset-0",
@@ -88,7 +91,7 @@ export function StarParticles({
           }}
           initial={{ opacity: star.baseOpacity * 0.3, scale: 0.85 }}
           animate={
-            reducedMotion
+            reducedMotion || !isInView
               ? { opacity: star.baseOpacity }
               : {
                   opacity: [
@@ -102,7 +105,7 @@ export function StarParticles({
                 }
           }
           transition={
-            reducedMotion
+            reducedMotion || !isInView
               ? undefined
               : {
                   opacity: {

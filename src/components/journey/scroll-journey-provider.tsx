@@ -27,8 +27,6 @@ interface JourneyContextValue {
   isMobile: boolean;
   isReducedMotion: boolean;
   refresh: () => void;
-  registerTimeline: (id: string, timeline: gsap.core.Timeline) => void;
-  unregisterTimeline: (id: string) => void;
 }
 
 const JourneyContext = createContext<JourneyContextValue | null>(null);
@@ -42,8 +40,6 @@ export function ScrollJourneyProvider({
 }: ScrollJourneyProviderProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
-  const isClient = typeof window !== "undefined";
-  const timelinesRef = useRef<Map<string, gsap.core.Timeline>>(new Map());
   const gsapContextRef = useRef<gsap.Context | null>(null);
 
   // Detect mobile on mount and resize
@@ -67,8 +63,6 @@ export function ScrollJourneyProvider({
 
   // Create GSAP context on mount (client-side only)
   useEffect(() => {
-    if (!isClient) return;
-
     // Create a main context for all journey animations
     gsapContextRef.current = gsap.context(() => {});
 
@@ -89,23 +83,11 @@ export function ScrollJourneyProvider({
       // Clean up GSAP context
       gsapContextRef.current?.revert();
     };
-  }, [isClient]);
+  }, []);
 
   // Refresh all ScrollTriggers
   const refresh = useCallback(() => {
-    if (isClient) {
-      ScrollTrigger.refresh();
-    }
-  }, [isClient]);
-
-  // Register a timeline for tracking
-  const registerTimeline = useCallback((id: string, timeline: gsap.core.Timeline) => {
-    timelinesRef.current.set(id, timeline);
-  }, []);
-
-  // Unregister a timeline
-  const unregisterTimeline = useCallback((id: string) => {
-    timelinesRef.current.delete(id);
+    ScrollTrigger.refresh();
   }, []);
 
   const contextValue: JourneyContextValue = {
@@ -114,14 +96,7 @@ export function ScrollJourneyProvider({
     isMobile,
     isReducedMotion,
     refresh,
-    registerTimeline,
-    unregisterTimeline,
   };
-
-  if (!isClient) {
-    // Server-side: render children without provider functionality
-    return <>{children}</>;
-  }
 
   return (
     <JourneyContext.Provider value={contextValue}>
@@ -140,29 +115,4 @@ export function useJourney(): JourneyContextValue {
     throw new Error("useJourney must be used within ScrollJourneyProvider");
   }
   return context;
-}
-
-/**
- * Hook to create a GSAP context for a component
- * Automatically cleans up on unmount
- */
-export function useJourneyContext(
-  callback: (ctx: gsap.Context) => void,
-  // deps: React.DependencyList = []
-  deps: unknown = []
-) {
-  const { gsap: gsapInstance } = useJourney();
-  const contextRef = useRef<gsap.Context | null>(null);
-
-  useEffect(() => {
-    contextRef.current = gsapInstance.context(callback);
-    return () => {
-      contextRef.current?.revert();
-    };
-    // We only want to create the context once on mount and clean up on unmount.
-    // The callback is wrapped in the component's own dependency handling.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deps]);
-
-  return contextRef;
 }

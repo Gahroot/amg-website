@@ -2,12 +2,6 @@ import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { ContactFAQ } from "../contact-faq";
 
-vi.mock("@/components/ui/animate-on-scroll", () => ({
-  AnimateOnScroll: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
 vi.mock("@/components/ui/accordion", () => ({
   Accordion: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
@@ -24,17 +18,17 @@ vi.mock("@/components/ui/accordion", () => ({
 }));
 
 describe("ContactFAQ", () => {
-  it("renders section heading 'COMMON QUESTIONS'", () => {
+  it("renders section heading 'Common Questions'", () => {
     render(<ContactFAQ />);
 
-    expect(screen.getByText("COMMON QUESTIONS")).toBeInTheDocument();
+    expect(screen.getByText("Common Questions")).toBeInTheDocument();
   });
 
-  it("renders label 'FREQUENTLY ASKED QUESTIONS'", () => {
+  it("renders label 'Frequently Asked Questions'", () => {
     render(<ContactFAQ />);
 
     expect(
-      screen.getByText("FREQUENTLY ASKED QUESTIONS")
+      screen.getByText("Frequently Asked Questions")
     ).toBeInTheDocument();
   });
 

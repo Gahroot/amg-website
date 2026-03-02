@@ -31,10 +31,6 @@ interface ScrollJourneyProps {
    */
   posterSrc?: string;
   /**
-   * Whether to show the custom navbar
-   */
-  showNavbar?: boolean;
-  /**
    * Custom navbar exit link
    */
   exitLink?: string;
@@ -44,7 +40,7 @@ function ScrollJourneyContent({
   videoSrc,
   posterSrc,
   exitLink = "/",
-}: Omit<ScrollJourneyProps, "showNavbar">) {
+}: ScrollJourneyProps) {
   return (
     <div className="scroll-journey light">
       {/* Custom Auto-Hide Navbar */}
@@ -76,12 +72,3 @@ export function ScrollJourney(props: ScrollJourneyProps) {
   );
 }
 
-// Export individual components for flexibility
-export {
-  ScrollJourneyProvider,
-  NavbarAutohide,
-  JourneyHero,
-  JourneyHorizontalTiles,
-  JourneyVerticalTimeline,
-  JourneyCTA,
-};

@@ -1,61 +1,12 @@
-import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { Domains } from "../domains";
 
-vi.mock("@/components/ui/animate-on-scroll", () => ({
-  AnimateOnScroll: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
-vi.mock("@/components/ui/tabs", () => ({
-  Tabs: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  TabsList: ({ children }: { children: ReactNode }) => (
-    <div role="tablist">{children}</div>
-  ),
-  TabsTrigger: ({
-    children,
-    value,
-  }: {
-    children: ReactNode;
-    value: string;
-  }) => (
-    <button role="tab" data-value={value}>
-      {children}
-    </button>
-  ),
-  TabsContent: ({
-    children,
-    value,
-  }: {
-    children: ReactNode;
-    value: string;
-  }) => (
-    <div role="tabpanel" data-value={value}>
-      {children}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/ui/card", () => ({
-  Card: ({
-    children,
-    ...props
-  }: {
-    children: ReactNode;
-    [key: string]: unknown;
-  }) => <div {...props}>{children}</div>,
-  CardContent: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
-
 describe("Domains", () => {
-  it("renders section heading 'FIVE DOMAINS. ONE ECOSYSTEM.'", () => {
+  it("renders section heading", () => {
     render(<Domains />);
 
     expect(
-      screen.getByText("FIVE DOMAINS. ONE ECOSYSTEM.")
+      screen.getByText("Five Domains. One Operating System.")
     ).toBeInTheDocument();
   });
 
@@ -65,15 +16,18 @@ describe("Domains", () => {
     expect(screen.getByText("OUR DOMAINS")).toBeInTheDocument();
   });
 
-  it("renders all 5 domain tabs", () => {
+  it("renders all 5 domain titles", () => {
     render(<Domains />);
 
-    const tabs = screen.getAllByRole("tab");
-    expect(tabs).toHaveLength(5);
-
-    const tabLabels = ["Neurobiology", "Cyber & Security", "Leadership", "Medicine", "Intelligence"];
-    for (const label of tabLabels) {
-      expect(screen.getByRole("tab", { name: new RegExp(label) })).toBeInTheDocument();
+    const domainTitles = [
+      "Neurobiology & Performance",
+      "Cyber & Protective Security",
+      "Leadership Development",
+      "Integrative Medicine",
+      "Business Intelligence",
+    ];
+    for (const title of domainTitles) {
+      expect(screen.getByText(title)).toBeInTheDocument();
     }
   });
 

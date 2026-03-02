@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { OverlayNav } from "./overlay-nav";
 
 export function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
   const [isSolid, setIsSolid] = useState(true);
-  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia(
@@ -68,7 +67,6 @@ export function Navbar() {
   return (
     <>
       <header
-        ref={headerRef}
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
           isSolid ? "bg-background/80 backdrop-blur-md" : ""
         }`}

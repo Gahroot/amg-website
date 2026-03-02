@@ -130,8 +130,6 @@ export function JourneyVerticalTimeline({
 
       if (mobile || reducedMotion) return;
 
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-
       const firstStop = stops[0];
       const lastStop = stops[stops.length - 1];
 

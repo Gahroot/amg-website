@@ -64,6 +64,13 @@ export function OverlayNav({ open, onClose }: OverlayNavProps) {
     { scope: overlayRef }
   );
 
+  // Always restore body overflow on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   useEffect(() => {
     if (!tlRef.current) return;
     if (open) {

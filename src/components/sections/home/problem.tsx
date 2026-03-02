@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useSyncExternalStore } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const challenges = [
   {
@@ -76,39 +76,18 @@ export function Problem() {
 
   useGSAP(
     () => {
-      console.log("[AMG:problem] useGSAP callback fired. canPin:", canPin);
-
-      if (!canPin) {
-        console.log("[AMG:problem] canPin is false — skipping animations");
-        return;
-      }
+      if (!canPin) return;
 
       initGSAP();
 
       const section = sectionRef.current;
       const pin = pinRef.current;
       const callout = calloutRef.current;
-      console.log("[AMG:problem] Refs:", {
-        section: !!section,
-        pin: !!pin,
-        callout: !!callout,
-        sectionId: section?.id,
-        sectionHeight: section?.style.height,
-        sectionOffsetHeight: section?.offsetHeight,
-        sectionBoundingTop: section?.getBoundingClientRect().top,
-      });
 
-      if (!section || !pin || !callout) {
-        console.warn("[AMG:problem] Missing refs — aborting");
-        return;
-      }
+      if (!section || !pin || !callout) return;
 
       const items = challengeRefs.current.filter(Boolean) as HTMLDivElement[];
-      console.log("[AMG:problem] Challenge items found:", items.length);
-      if (items.length === 0) {
-        console.warn("[AMG:problem] No challenge items — aborting");
-        return;
-      }
+      if (items.length === 0) return;
 
       gsap.set(items, { autoAlpha: 0, y: 40 });
       gsap.set(callout, { autoAlpha: 0, y: 60 });
@@ -121,23 +100,7 @@ export function Problem() {
           pin: pin,
           scrub: 0.8,
           invalidateOnRefresh: true,
-          onToggle: (self) => {
-            console.log("[AMG:problem] ScrollTrigger toggled:", { isActive: self.isActive, direction: self.direction, progress: self.progress?.toFixed(3) });
-          },
-          onUpdate: (self) => {
-            if (Math.round(self.progress * 100) % 25 === 0) {
-              console.log("[AMG:problem] ScrollTrigger progress:", self.progress?.toFixed(3), "direction:", self.direction);
-            }
-          },
         },
-      });
-
-      console.log("[AMG:problem] Timeline created. ScrollTrigger:", {
-        exists: !!tl.scrollTrigger,
-        start: tl.scrollTrigger?.start,
-        end: tl.scrollTrigger?.end,
-        pin: !!tl.scrollTrigger?.pin,
-        triggerElement: (tl.scrollTrigger?.trigger as HTMLElement)?.id,
       });
 
       const segmentDuration = 1;
@@ -165,10 +128,7 @@ export function Problem() {
         items.length * segmentDuration
       );
 
-      console.log("[AMG:problem] Timeline fully built. Duration:", tl.duration(), "Total ScrollTriggers now:", ScrollTrigger.getAll().length);
-
       return () => {
-        console.log("[AMG:problem] Cleanup — killing timeline + scrollTrigger");
         tl.scrollTrigger?.kill();
         tl.kill();
       };

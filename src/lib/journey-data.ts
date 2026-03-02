@@ -233,22 +233,3 @@ export const ctaContent = {
   buttonLink: "/contact",
 };
 
-// ============================================================================
-// UTILITIES
-// ============================================================================
-
-/**
- * Check if device is mobile based on screen width
- */
-export function isMobile(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.innerWidth < 768;
-}
-
-/**
- * Check if user prefers reduced motion
- */
-export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}

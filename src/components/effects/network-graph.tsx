@@ -63,6 +63,8 @@ export function NetworkGraph({
 }: NetworkGraphProps) {
   const fgRef = useRef<ForceGraphMethods<GraphNode>>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout>(undefined);
+  const spriteRef = useRef<{ sprite: Sprite; text: string } | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [highlightLinks, setHighlightLinks] = useState<Set<string>>(
@@ -84,6 +86,17 @@ export function NetworkGraph({
     }),
     [nodes, links],
   );
+
+  // Clean up timeout and sprite on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(clickTimeoutRef.current);
+      if (spriteRef.current) {
+        spriteRef.current.sprite.material.map?.dispose();
+        spriteRef.current.sprite.material.dispose();
+      }
+    };
+  }, []);
 
   // Responsive sizing
   useEffect(() => {
@@ -235,7 +248,7 @@ export function NetworkGraph({
 
       // After zoom animation, compute screen position and show tooltip
       const clickedNode = node as NetworkNode;
-      setTimeout(() => {
+      clickTimeoutRef.current = setTimeout(() => {
         const coords = fg.graph2ScreenCoords(
           node.x || 0,
           node.y || 0,
@@ -309,11 +322,22 @@ export function NetworkGraph({
     [highlightLinks],
   );
 
-  // Custom Three.js object: extend hub node with a text label sprite
+  // Custom Three.js object: extend hub node with a cached text label sprite
   const getNodeThreeObject = useCallback(
     (node: GraphNode) => {
       if (node.id === centerNodeId) {
-        return createTextSprite(node.name || "");
+        const text = node.name || "";
+        if (spriteRef.current && spriteRef.current.text === text) {
+          return spriteRef.current.sprite;
+        }
+        // Dispose old sprite resources
+        if (spriteRef.current) {
+          spriteRef.current.sprite.material.map?.dispose();
+          spriteRef.current.sprite.material.dispose();
+        }
+        const sprite = createTextSprite(text);
+        spriteRef.current = { sprite, text };
+        return sprite;
       }
       return false as unknown as Sprite;
     },

@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useSyncExternalStore } from "react";
 import Image from "next/image";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 /* ------------------------------------------------------------------ */
 /*  Steps data                                                         */
@@ -90,39 +90,18 @@ export function HowItWorks() {
 
   useGSAP(
     () => {
-      console.log("[AMG:how-it-works] useGSAP callback fired. canPin:", canPin);
-
-      if (!canPin) {
-        console.log("[AMG:how-it-works] canPin is false — skipping");
-        return;
-      }
+      if (!canPin) return;
 
       initGSAP();
 
       const section = sectionRef.current;
       const pin = pinRef.current;
       const image = imageRef.current;
-      console.log("[AMG:how-it-works] Refs:", {
-        section: !!section,
-        pin: !!pin,
-        image: !!image,
-        sectionId: section?.id,
-        sectionHeight: section?.style.height,
-        sectionOffsetHeight: section?.offsetHeight,
-        sectionBoundingTop: section?.getBoundingClientRect().top,
-      });
 
-      if (!section || !pin || !image) {
-        console.warn("[AMG:how-it-works] Missing refs — aborting");
-        return;
-      }
+      if (!section || !pin || !image) return;
 
       const items = stepRefs.current.filter(Boolean) as HTMLDivElement[];
-      console.log("[AMG:how-it-works] Step items found:", items.length);
-      if (items.length === 0) {
-        console.warn("[AMG:how-it-works] No step items — aborting");
-        return;
-      }
+      if (items.length === 0) return;
 
       // Initially hide all step items
       gsap.set(items, { autoAlpha: 0, y: 20 });
@@ -136,22 +115,7 @@ export function HowItWorks() {
           pin: pin,
           scrub: 0.8,
           invalidateOnRefresh: true,
-          onToggle: (self) => {
-            console.log("[AMG:how-it-works] ScrollTrigger toggled:", { isActive: self.isActive, direction: self.direction, progress: self.progress?.toFixed(3) });
-          },
-          onUpdate: (self) => {
-            if (Math.round(self.progress * 100) % 25 === 0) {
-              console.log("[AMG:how-it-works] ScrollTrigger progress:", self.progress?.toFixed(3));
-            }
-          },
         },
-      });
-
-      console.log("[AMG:how-it-works] Timeline created. ScrollTrigger:", {
-        exists: !!tl.scrollTrigger,
-        start: tl.scrollTrigger?.start,
-        end: tl.scrollTrigger?.end,
-        pin: !!tl.scrollTrigger?.pin,
       });
 
       // Image parallax across full timeline
@@ -180,10 +144,7 @@ export function HowItWorks() {
         );
       });
 
-      console.log("[AMG:how-it-works] Timeline fully built. Duration:", tl.duration(), "Total ScrollTriggers now:", ScrollTrigger.getAll().length);
-
       return () => {
-        console.log("[AMG:how-it-works] Cleanup — killing timeline + scrollTrigger");
         tl.scrollTrigger?.kill();
         tl.kill();
       };
