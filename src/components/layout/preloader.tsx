@@ -1,104 +1,89 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef, useEffect } from "react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 interface PreloaderProps {
   onComplete: () => void;
 }
 
-function subscribeToPreloader(cb: () => void) {
-  // Once set, never changes during session
-  return () => {
-    void cb;
-  };
-}
-
-function getPreloaderSnapshot() {
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-  const visited = sessionStorage.getItem("amg-visited");
-  return !reducedMotion && !visited;
-}
-
-function getPreloaderServerSnapshot() {
-  return false;
-}
-
 export function Preloader({ onComplete }: PreloaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const counterRef = useRef<HTMLSpanElement>(null);
 
-  const shouldShow = useSyncExternalStore(
-    subscribeToPreloader,
-    getPreloaderSnapshot,
-    getPreloaderServerSnapshot
-  );
+  useEffect(() => {
+    // Prevent scroll during preloader
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      // Cleanup: restore scroll when unmounting
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   useGSAP(
     () => {
-      if (!shouldShow) {
-        onComplete();
-        return;
-      }
+      if (!containerRef.current) return;
 
-      if (!containerRef.current || !counterRef.current) return;
+      console.log("[AMG:preloader] Starting logo reveal animation");
 
       initGSAP();
-      sessionStorage.setItem("amg-visited", "1");
-      document.body.style.overflow = "hidden";
 
       const tl = gsap.timeline({
         onComplete: () => {
+          console.log("[AMG:preloader] Animation complete, showing content");
           document.body.style.overflow = "";
           onComplete();
         },
       });
 
-      // Counter 000 → 100
-      const counter = { value: 0 };
-      tl.to(counter, {
-        value: 100,
-        duration: 1.8,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          if (counterRef.current) {
-            counterRef.current.textContent = String(
-              Math.round(counter.value)
-            ).padStart(3, "0");
-          }
-        },
-      });
-
-      // Wordmark fades in
+      // Logo fades in + scale up (power3.out for smooth ease)
       tl.fromTo(
-        ".preloader-wordmark",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-        0.2
+        ".preloader-logo",
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" },
+        0.3
       );
 
-      // Rule draws across
+      // Wordmark fades in with slight rise
+      tl.fromTo(
+        ".preloader-wordmark",
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+        "-=0.3"
+      );
+
+      // Decorative rule draws from left
       tl.fromTo(
         ".preloader-rule",
         { scaleX: 0 },
         { scaleX: 1, duration: 0.8, ease: "power2.inOut" },
-        0.6
+        "-=0.3"
       );
 
-      // Counter fades out
-      tl.to(".preloader-counter", {
-        opacity: 0,
-        duration: 0.3,
-      });
+      // Pause for brand impression
+      tl.to({}, { duration: 0.6 });
 
-      // Split curtain reveal
-      tl.to(".preloader-panel-top", {
-        yPercent: -100,
-        duration: 0.8,
-        ease: "power3.inOut",
-      });
+      // Fade out center content
+      tl.to(
+        [".preloader-logo", ".preloader-wordmark", ".preloader-rule"],
+        {
+          opacity: 0,
+          scale: 0.95,
+          duration: 0.4,
+          ease: "power2.in",
+        }
+      );
+
+      // Curtain reveal - split panels slide apart
+      tl.to(
+        ".preloader-panel-top",
+        {
+          yPercent: -100,
+          duration: 0.8,
+          ease: "power3.inOut",
+        },
+        "-=0.1"
+      );
       tl.to(
         ".preloader-panel-bottom",
         {
@@ -109,37 +94,40 @@ export function Preloader({ onComplete }: PreloaderProps) {
         "<"
       );
     },
-    { scope: containerRef, dependencies: [shouldShow, onComplete] }
+    { scope: containerRef, dependencies: [onComplete] }
   );
 
-  if (!shouldShow) return null;
-
+  // Render immediately - no conditional rendering to prevent flash
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] pointer-events-none"
+      className="fixed inset-0 z-[9999] bg-background pointer-events-none"
+      style={{ backgroundColor: "var(--background)" }}
     >
-      {/* Top panel */}
+      {/* Split panels for curtain reveal */}
       <div className="preloader-panel-top absolute inset-0 bottom-1/2 bg-background" />
-      {/* Bottom panel */}
       <div className="preloader-panel-bottom absolute inset-0 top-1/2 bg-background" />
 
-      {/* Center content */}
+      {/* Centered logo reveal */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <h1 className="preloader-wordmark font-serif text-3xl md:text-5xl tracking-tight text-foreground opacity-0">
+        {/* Logo image with luxury styling */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Anchor-mill-group-logo.webp"
+          alt="Anchor Mill Group"
+          className="preloader-logo w-[120px] md:w-[180px] opacity-0 drop-shadow-lg"
+        />
+
+        {/* Brand name in elegant typography */}
+        <h1
+          className="preloader-wordmark font-serif italic text-lg md:text-xl
+                     tracking-widest text-primary mt-6 opacity-0"
+        >
           ANCHOR MILL GROUP
         </h1>
-        <div className="preloader-rule mt-4 h-px w-48 bg-foreground/30 origin-left" />
-      </div>
 
-      {/* Counter */}
-      <div className="preloader-counter absolute bottom-8 left-8">
-        <span
-          ref={counterRef}
-          className="font-mono text-sm text-muted-foreground tabular-nums"
-        >
-          000
-        </span>
+        {/* Decorative rule */}
+        <div className="preloader-rule mt-4 h-px w-32 bg-primary/50 origin-left" />
       </div>
     </div>
   );
