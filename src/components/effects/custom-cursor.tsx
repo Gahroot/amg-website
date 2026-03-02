@@ -110,28 +110,30 @@ export function CustomCursor() {
       {/* Outer ring */}
       <div
         ref={ringRef}
-        className="fixed top-0 left-0 z-[9998] pointer-events-none"
+        className="fixed top-0 left-0 z-[10000] pointer-events-none"
         style={{
           width: 40,
           height: 40,
           marginLeft: -20,
           marginTop: -20,
           borderRadius: "50%",
-          border: "1px solid rgba(26, 23, 20, 0.3)",
+          border: "1px solid rgba(255, 255, 255, 0.9)",
+          mixBlendMode: "difference",
           willChange: "transform",
         }}
       />
       {/* Inner dot */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 z-[9998] pointer-events-none"
+        className="fixed top-0 left-0 z-[10000] pointer-events-none"
         style={{
           width: 6,
           height: 6,
           marginLeft: -3,
           marginTop: -3,
           borderRadius: "50%",
-          backgroundColor: "rgba(26, 23, 20, 0.6)",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          mixBlendMode: "difference",
           willChange: "transform",
         }}
       />
