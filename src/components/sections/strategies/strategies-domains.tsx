@@ -175,14 +175,6 @@ export function StrategiesDomains() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                      Domain Partner:
-                    </span>
-                    <span className="text-primary font-medium">
-                      {domain.partner}
-                    </span>
-                  </div>
                 </AccordionContent>
               </AccordionItem>
             ))}

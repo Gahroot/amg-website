@@ -29,7 +29,7 @@ describe("partnerNetworkData", () => {
       expect(node.id.length).toBeGreaterThan(0);
       expect(typeof node.name).toBe("string");
       expect(node.name.length).toBeGreaterThan(0);
-      expect(["hub", "domain", "partner"]).toContain(node.group);
+      expect(["hub", "domain"]).toContain(node.group);
       expect(typeof node.val).toBe("number");
       expect(node.val).toBeGreaterThan(0);
       expect(typeof node.color).toBe("string");
@@ -71,14 +71,6 @@ describe("partnerNetworkData", () => {
     }
   });
 
-  it("partner nodes have correct group", () => {
-    const partnerNodes = nodes.filter((n) => n.id.startsWith("p-"));
-    expect(partnerNodes.length).toBeGreaterThan(0);
-    for (const node of partnerNodes) {
-      expect(node.group).toBe("partner");
-    }
-  });
-
   it("hub node has fixed position (fx, fy, fz = 0)", () => {
     const hubNode = nodes.find((n) => n.group === "hub");
     expect(hubNode).toBeDefined();
@@ -95,11 +87,6 @@ describe("partnerNetworkData", () => {
   it("has at least one domain node", () => {
     const domainNodes = nodes.filter((n) => n.group === "domain");
     expect(domainNodes.length).toBeGreaterThan(0);
-  });
-
-  it("has at least one partner node", () => {
-    const partnerNodes = nodes.filter((n) => n.group === "partner");
-    expect(partnerNodes.length).toBeGreaterThan(0);
   });
 
   it("has at least one link", () => {

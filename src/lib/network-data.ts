@@ -1,7 +1,7 @@
 export interface NetworkNode {
   id: string;
   name: string;
-  group: "hub" | "domain" | "partner";
+  group: "hub" | "domain";
   val: number;
   color: string;
   description?: string;
@@ -29,13 +29,11 @@ export interface NetworkGraphData {
 const COLORS = {
   hub: "#d4c9a8",
   domain: "#b8ad88",
-  partner: "#8a8578",
 } as const;
 
 // Pre-compute radial positions so nodes start in a hub-spoke shape
 // instead of all at origin (which collapses into a line)
 const INNER_RADIUS = 60;
-const OUTER_RADIUS = 120;
 
 function ringPosition(index: number, total: number, radius: number) {
   const angle = (2 * Math.PI * index) / total;
@@ -49,10 +47,6 @@ function ringPosition(index: number, total: number, radius: number) {
 const domainPositions = Array.from({ length: 5 }, (_, i) =>
   ringPosition(i, 5, INNER_RADIUS),
 );
-const partnerPositions = Array.from({ length: 6 }, (_, i) =>
-  ringPosition(i, 6, OUTER_RADIUS),
-);
-
 // Default partner ecosystem data
 export const partnerNetworkData: NetworkGraphData = {
   centerNodeId: "amg",
@@ -128,73 +122,6 @@ export const partnerNetworkData: NetworkGraphData = {
       ...domainPositions[4],
     },
 
-    // Partners (outer ring)
-    {
-      id: "p-mcmanus",
-      name: "Dr. Barry McManus",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "Former Senior Intelligence Officer. Leads intelligence and assessment operations with decades of field experience.",
-      href: "/#partners",
-      ...partnerPositions[0],
-    },
-    {
-      id: "p-morgan",
-      name: "Dr. Charles Morgan III",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "Yale School of Medicine, Former CIA. Neurobiology and human performance specialist for high-stakes decision-making.",
-      href: "/#partners",
-      ...partnerPositions[1],
-    },
-    {
-      id: "p-lavalle",
-      name: "Dr. James LaValle",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "Clinical Pharmacist, Metabolic Medicine. Integrative health optimization for sustained cognitive and physical resilience.",
-      href: "/#partners",
-      ...partnerPositions[2],
-    },
-    {
-      id: "p-krupa",
-      name: "Ryan Krupa",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "Fortune 100 Executive Coach. Strategic leadership development and succession readiness for family enterprises.",
-      href: "/#partners",
-      ...partnerPositions[3],
-    },
-    {
-      id: "p-labs",
-      name: "AMG Labs",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "NSA/Government-level threat operations. Advanced cyber defense and digital security infrastructure.",
-      href: "/#partners",
-      ...partnerPositions[4],
-    },
-    {
-      id: "p-holzschuh",
-      name: "Scot Holzschuh",
-      group: "partner",
-      val: 3,
-      color: COLORS.partner,
-      description:
-        "USMC Veteran, Executive Protection. Protective operations and physical security for principals and key family members.",
-      href: "/#partners",
-      ...partnerPositions[5],
-    },
   ],
   links: [
     // Hub → Domains
@@ -204,16 +131,5 @@ export const partnerNetworkData: NetworkGraphData = {
     { source: "amg", target: "d-leadership" },
     { source: "amg", target: "d-medicine" },
 
-    // Domains → Partners
-    { source: "d-intel", target: "p-mcmanus" },
-    { source: "d-neuro", target: "p-morgan" },
-    { source: "d-medicine", target: "p-lavalle" },
-    { source: "d-leadership", target: "p-krupa" },
-    { source: "d-cyber", target: "p-labs" },
-    { source: "d-intel", target: "p-holzschuh" },
-
-    // Cross-domain connections (partners who span multiple domains)
-    { source: "d-neuro", target: "p-mcmanus" },
-    { source: "d-cyber", target: "p-holzschuh" },
   ],
 };

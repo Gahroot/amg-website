@@ -106,8 +106,7 @@ export function TerminalTooltip({
   let top = screenPosition.y - tooltipHeight / 2;
   top = Math.max(padding, Math.min(top, containerRect.height - tooltipHeight - padding));
 
-  const linkLabel =
-    node?.group === "partner" ? "VIEW PROFILE >>" : "ACCESS DOMAIN >>";
+  const linkLabel = "ACCESS DOMAIN >>";
 
   return (
     <AnimatePresence>

@@ -19,14 +19,6 @@ const Differentiators = dynamic(
     ),
   { ssr: true, loading },
 );
-const PartnerBios = dynamic(
-  () =>
-    import("@/components/sections/about/partner-bios").then(
-      (m) => m.PartnerBios,
-    ),
-  { ssr: true, loading },
-);
-
 export const metadata = {
   title: "About",
   description:
@@ -42,7 +34,6 @@ export default function AboutPage() {
         <AboutHero />
         <WhatWeDo />
         <Differentiators />
-        <PartnerBios />
       </main>
       <Footer />
     </>

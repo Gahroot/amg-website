@@ -43,10 +43,6 @@ const CaseStudy = dynamic(
   () => import("./case-study").then((m) => m.CaseStudy),
   { ssr: false, loading }
 );
-const Partners = dynamic(
-  () => import("./partners").then((m) => m.Partners),
-  { ssr: false, loading }
-);
 const EngagementModel = dynamic(
   () => import("./engagement-model").then((m) => m.EngagementModel),
   { ssr: false, loading }
@@ -108,7 +104,6 @@ export function HomeClient() {
         <HowItWorks />
         <Metrics />
         <CaseStudy />
-        <Partners />
         <EngagementModel />
         <CTA />
       </main>
