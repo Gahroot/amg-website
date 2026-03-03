@@ -24,30 +24,10 @@ import {
   Award,
   Globe,
 } from "lucide-react";
+import { loadGSAP } from "@/lib/gsap";
 
 interface JourneyVerticalTimelineProps {
   trackHeight?: string;
-}
-
-// Global GSAP instances
-let gsapInstance: typeof import("gsap").gsap | null = null;
-let ScrollTriggerInstance: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
-let gsapInitialized = false;
-
-async function getGSAP() {
-  if (typeof window === "undefined") return null;
-  if (gsapInitialized) return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
-
-  const gsapModule = await import("gsap");
-  const scrollTriggerModule = await import("gsap/ScrollTrigger");
-
-  gsapInstance = gsapModule.gsap;
-  ScrollTriggerInstance = scrollTriggerModule.ScrollTrigger;
-
-  gsapInstance.registerPlugin(ScrollTriggerInstance);
-  gsapInitialized = true;
-
-  return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
 }
 
 // Icon components
@@ -100,23 +80,20 @@ const ProactiveIcon = () => (
 export function JourneyVerticalTimeline({
   trackHeight = "500vh",
 }: JourneyVerticalTimelineProps) {
-  const [isClient] = useState(() => typeof window !== "undefined");
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
   const stopsRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const ctxRef = useRef<gsap.Context | null>(null);
 
   useLayoutEffect(() => {
-    if (!isClient) return;
+    let mounted = true;
 
     const setupAnimation = async () => {
-      const result = await getGSAP();
-      if (!result || !containerRef.current) return;
-
-      const { gsap, ScrollTrigger } = result;
-      if (!gsap || !ScrollTrigger) return;
+      const { gsap } = await loadGSAP();
+      if (!mounted || !containerRef.current) return;
 
       const container = containerRef.current;
       const line = lineRef.current;
@@ -175,30 +152,24 @@ export function JourneyVerticalTimeline({
         });
       }, container);
 
-      (container as unknown as { _gsapContext?: gsap.Context })._gsapContext = ctx;
+      ctxRef.current = ctx;
     };
 
     setupAnimation();
 
-    // Capture ref value for cleanup
-    const container = containerRef.current;
     return () => {
-      if (container) {
-        const ctx = (container as unknown as { _gsapContext?: gsap.Context })._gsapContext;
-        if (ctx) ctx.revert();
-      }
+      mounted = false;
+      ctxRef.current?.revert();
     };
-  }, [isClient]);
+  }, []);
 
   // Mobile detection
   useEffect(() => {
-    if (!isClient || typeof window === "undefined") return;
-
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, [isClient]);
+  }, []);
 
   // Mobile: IntersectionObserver for active stop tracking
   useEffect(() => {

@@ -83,16 +83,21 @@ export function CustomCursor() {
     window.addEventListener("mousemove", onMouseMove);
 
     let hoverElements = addHoverListeners();
+    let debounceTimer: ReturnType<typeof setTimeout>;
     const observer = new MutationObserver(() => {
-      hoverElements.forEach((el) => {
-        el.removeEventListener("mouseenter", onMouseEnterInteractive);
-        el.removeEventListener("mouseleave", onMouseLeaveInteractive);
-      });
-      hoverElements = addHoverListeners();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        hoverElements.forEach((el) => {
+          el.removeEventListener("mouseenter", onMouseEnterInteractive);
+          el.removeEventListener("mouseleave", onMouseLeaveInteractive);
+        });
+        hoverElements = addHoverListeners();
+      }, 100);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
+      clearTimeout(debounceTimer);
       window.removeEventListener("mousemove", onMouseMove);
       document.documentElement.classList.remove("cursor-none-global");
       observer.disconnect();

@@ -82,7 +82,6 @@ export interface TimelineStop {
   label: string;
   title: string;
   description: string;
-  icon?: typeof Globe;
   quote?: string;
   cards?: Array<{
     icon: typeof Globe;

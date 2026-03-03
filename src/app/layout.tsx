@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Mono, Playfair_Display } from "next/font/google";
+import { Geist, IBM_Plex_Mono, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { ThemeEffects } from "@/components/effects/theme-effects";
@@ -7,11 +7,6 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -68,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${playfairDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${ibmPlexMono.variable} ${playfairDisplay.variable} antialiased`}
       >
         <a
           href="#main-content"

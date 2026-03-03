@@ -10,33 +10,13 @@ import React, { useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { ArrowDown } from "lucide-react";
 import { ctaContent } from "@/lib/journey-data";
+import { loadGSAP } from "@/lib/gsap";
 
 interface JourneyCTAProps {
   title?: string;
   description?: string;
   buttonText?: string;
   buttonLink?: string;
-}
-
-// Global GSAP instances
-let gsapInstance: typeof import("gsap").gsap | null = null;
-let ScrollTriggerInstance: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
-let gsapInitialized = false;
-
-async function getGSAP() {
-  if (typeof window === "undefined") return null;
-  if (gsapInitialized) return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
-
-  const gsapModule = await import("gsap");
-  const scrollTriggerModule = await import("gsap/ScrollTrigger");
-
-  gsapInstance = gsapModule.gsap;
-  ScrollTriggerInstance = scrollTriggerModule.ScrollTrigger;
-
-  gsapInstance.registerPlugin(ScrollTriggerInstance);
-  gsapInitialized = true;
-
-  return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
 }
 
 export function JourneyCTA({
@@ -46,14 +26,14 @@ export function JourneyCTA({
   buttonLink = ctaContent.buttonLink,
 }: JourneyCTAProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
 
   useLayoutEffect(() => {
-    const setupAnimation = async () => {
-      const result = await getGSAP();
-      if (!result || !containerRef.current) return;
+    let mounted = true;
 
-      const { gsap } = result;
-      if (!gsap) return;
+    const setupAnimation = async () => {
+      const { gsap } = await loadGSAP();
+      if (!mounted || !containerRef.current) return;
 
       const container = containerRef.current;
       const titleEl = container.querySelector(".cta-title");
@@ -118,18 +98,14 @@ export function JourneyCTA({
         );
       }, container);
 
-      (container as unknown as { _gsapContext?: gsap.Context })._gsapContext = ctx;
+      ctxRef.current = ctx;
     };
 
     setupAnimation();
 
-    // Capture ref value for cleanup
-    const container = containerRef.current;
     return () => {
-      if (container) {
-        const ctx = (container as unknown as { _gsapContext?: gsap.Context })._gsapContext;
-        if (ctx) ctx.revert();
-      }
+      mounted = false;
+      ctxRef.current?.revert();
     };
   }, []);
 
@@ -149,14 +125,12 @@ export function JourneyCTA({
 
         <h2
           className="cta-title font-mono text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-foreground mb-8 leading-[1.1]"
-          style={{ opacity: 0 }}
         >
           {title}
         </h2>
 
         <p
           className="cta-description text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
-          style={{ opacity: 0 }}
         >
           {description}
         </p>
@@ -164,7 +138,6 @@ export function JourneyCTA({
         <Link
           href={buttonLink}
           className="cta-button group inline-flex items-center gap-4 bg-foreground text-background px-10 py-5 rounded-full font-mono text-sm uppercase tracking-widest font-semibold hover:bg-primary transition-all duration-300"
-          style={{ opacity: 0 }}
         >
           {buttonText}
           <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" strokeWidth={2} />

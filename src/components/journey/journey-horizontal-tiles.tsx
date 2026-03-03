@@ -17,50 +17,27 @@
 
 import React, { useRef, useLayoutEffect, useState } from "react";
 import { journeyTiles } from "@/lib/journey-data";
+import { loadGSAP } from "@/lib/gsap";
 
 interface JourneyHorizontalTilesProps {
   trackHeight?: string;
 }
 
-// Global GSAP instances (client-side only)
-let gsapInstance: typeof import("gsap").gsap | null = null;
-let ScrollTriggerInstance: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
-let gsapInitialized = false;
-
-async function getGSAP() {
-  if (typeof window === "undefined") return null;
-  if (gsapInitialized) return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
-
-  const gsapModule = await import("gsap");
-  const scrollTriggerModule = await import("gsap/ScrollTrigger");
-
-  gsapInstance = gsapModule.gsap;
-  ScrollTriggerInstance = scrollTriggerModule.ScrollTrigger;
-
-  gsapInstance.registerPlugin(ScrollTriggerInstance);
-  gsapInitialized = true;
-
-  return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
-}
-
 export function JourneyHorizontalTiles({
   trackHeight = "600vh",
 }: JourneyHorizontalTilesProps) {
-  const [isClient] = useState(() => typeof window !== "undefined");
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
   const containerRef = useRef<HTMLDivElement>(null);
   const tilesWrapperRef = useRef<HTMLDivElement>(null);
   const tilesRef = useRef<HTMLDivElement>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
 
   useLayoutEffect(() => {
-    if (!isClient) return;
+    let mounted = true;
 
     const setupAnimation = async () => {
-      const result = await getGSAP();
-      if (!result || !containerRef.current || !tilesRef.current) return;
-
-      const { gsap, ScrollTrigger } = result;
-      if (!gsap || !ScrollTrigger) return;
+      const { gsap } = await loadGSAP();
+      if (!mounted || !containerRef.current || !tilesRef.current) return;
 
       const container = containerRef.current;
       const tiles = tilesRef.current;
@@ -93,52 +70,32 @@ export function JourneyHorizontalTiles({
         });
       }, container);
 
-      // Store context for cleanup
-      (container as unknown as { _gsapContext?: gsap.Context })._gsapContext = ctx;
+      ctxRef.current = ctx;
     };
 
     setupAnimation();
 
-    // Capture ref value for cleanup
-    const container = containerRef.current;
     return () => {
-      if (container) {
-        const ctx = (container as unknown as { _gsapContext?: gsap.Context })._gsapContext;
-        if (ctx) ctx.revert();
-      }
+      mounted = false;
+      ctxRef.current?.revert();
     };
-  }, [isClient]);
+  }, []);
 
   // Handle resize
   useLayoutEffect(() => {
-    const handleResize = () => {
+    const handleResize = async () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       // Refresh ScrollTrigger on resize
-      if (ScrollTriggerInstance && !mobile) {
-        ScrollTriggerInstance.refresh();
+      if (!mobile) {
+        const { ScrollTrigger } = await loadGSAP();
+        ScrollTrigger.refresh();
       }
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Don't render complex animations until client-side
-  if (!isClient) {
-    return (
-      <section className="journey-horizontal-tiles relative bg-[#ebe7df] min-h-screen">
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="w-12 h-12 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-mono text-xs uppercase tracking-widest text-primary">
-              Loading...
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section

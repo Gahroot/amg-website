@@ -13,14 +13,20 @@ src/
 │   ├── about/page.tsx             # About page
 │   ├── contact/page.tsx           # Contact + FAQ page
 │   ├── strategies/page.tsx        # Service domains detail page
-│   └── how-we-serve/page.tsx      # Client profiles + case studies page
+│   ├── how-we-serve/page.tsx      # Client profiles + case studies page
+│   └── journey/                   # Journey/timeline visualization page
+│       ├── layout.tsx             # Custom layout (navbar autohide)
+│       └── page.tsx               # Journey page
 ├── components/
 │   ├── ui/                        # shadcn/Radix base components
-│   ├── layout/                    # Navbar, Footer, ScrollProgress
-│   ├── effects/                   # Visual effects (Spotlight)
-│   ├── providers/                 # ThemeProvider (next-themes)
+│   ├── layout/                    # Navbar, Footer, OverlayNav, Preloader, ScrollProgress
+│   ├── effects/                   # CustomCursor, NetworkGraph, Spotlight, StarParticles,
+│   │                              #   TerminalTooltip, ThemeEffects, VideoBackground
+│   ├── journey/                   # ScrollJourney, VerticalTimeline, HorizontalTiles,
+│   │                              #   NavbarAutohide, ScrollHint, JourneyHero/CTA
+│   ├── providers/                 # ThemeProvider, SmoothScrollProvider
 │   └── sections/                  # Page content sections
-│       ├── home/                  # 10 home page sections
+│       ├── home/                  # 12 home page sections
 │       ├── about/                 # 4 about page sections
 │       ├── strategies/            # 2 strategies sections
 │       ├── contact/               # ContactForm, ContactFAQ
@@ -29,7 +35,10 @@ src/
     ├── utils.ts                   # cn() helper
     ├── site-config.ts             # Site metadata, URLs, email
     ├── nav-data.ts                # Navigation link data
-    └── animations.ts              # Shared motion variants
+    ├── gsap.ts                    # GSAP animation utilities
+    ├── journey-data.ts            # Journey timeline content data
+    ├── network-data.ts            # Network graph node/link data
+    └── use-scroll-pin.ts          # Custom hook for scroll pinning
 ```
 
 ## Tech Stack
@@ -38,9 +47,13 @@ src/
 - **Tailwind CSS v4** (PostCSS, `@theme inline` in globals.css)
 - **shadcn/ui** + Radix UI primitives
 - **Motion 12** (`motion/react`, not `framer-motion`)
-- **next-themes** (dark-first, class-based)
+- **GSAP 3** + `@gsap/react` (horizontal scroll, scroll-pinning)
+- **Lenis** (smooth scrolling)
+- **Three.js** + `react-force-graph-3d` (3D network visualization)
+- **next-themes** (light-first, class-based)
 - **Zod 4** (contact form validation)
 - **Lucide React** (icons)
+- **Vitest** + Testing Library (unit tests)
 
 ## Organization Rules
 
@@ -54,7 +67,7 @@ src/
 
 ## Design Conventions
 
-- **Dark-first**: `:root` = dark values, `.light` = light override
+- **Light-first**: `:root` = light (cream palette), `.dark` = dark override
 - **Typography**: `font-mono` (IBM Plex Mono) for headings/labels, `font-sans` (Geist) for body
 - **Headings**: `font-mono uppercase tracking-tight font-bold`
 - **Labels**: `font-mono text-xs uppercase tracking-widest text-primary`

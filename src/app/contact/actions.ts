@@ -40,6 +40,16 @@ export async function submitContactForm(
     return { success: false, errors };
   }
 
-  // No backend integration yet — matches previous client-only behavior
+  // TODO: Integrate email service (e.g., Resend, SendGrid)
+
+  // Log submission metadata (excluding message body for privacy)
+  console.log("[Contact Form Submission]", {
+    name: result.data.name,
+    email: result.data.email,
+    organization: result.data.organization,
+    phone: result.data.phone ?? "(not provided)",
+    timestamp: new Date().toISOString(),
+  });
+
   return { success: true, errors: {} };
 }

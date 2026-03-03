@@ -75,6 +75,17 @@ export function ScrollJourneyProvider({
     const loadHandler = () => {
       ScrollTrigger.refresh();
     };
+
+    if (document.readyState === "complete") {
+      // Document already loaded — fire handler on next tick
+      const loadTimer = setTimeout(loadHandler, 50);
+      return () => {
+        clearTimeout(refreshTimer);
+        clearTimeout(loadTimer);
+        gsapContextRef.current?.revert();
+      };
+    }
+
     window.addEventListener("load", loadHandler);
 
     return () => {

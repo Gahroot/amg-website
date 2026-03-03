@@ -26,6 +26,10 @@ interface NetworkGraphProps {
 
 type GraphNode = NodeObject<NetworkNode>;
 
+// Stable callback references for ForceGraph3D props (avoid re-creation each render)
+const getNodeVal = (node: GraphNode) => node.val || 3;
+const getParticleColor = () => "rgba(212, 201, 168, 0.5)";
+
 // Create a Three.js text sprite (canvas-rendered) to label the hub node
 function createTextSprite(text: string) {
   const canvas = document.createElement("canvas");
@@ -370,7 +374,7 @@ export function NetworkGraph({
         height={dimensions.height}
         backgroundColor="rgba(0,0,0,0)"
         nodeColor={getNodeColor}
-        nodeVal={(node: GraphNode) => node.val || 3}
+        nodeVal={getNodeVal}
         nodeLabel={getNodeLabel}
         nodeOpacity={0.9}
         nodeResolution={16}
@@ -382,7 +386,7 @@ export function NetworkGraph({
         linkDirectionalParticles={2}
         linkDirectionalParticleWidth={1.2}
         linkDirectionalParticleSpeed={0.004}
-        linkDirectionalParticleColor={() => "rgba(212, 201, 168, 0.5)"}
+        linkDirectionalParticleColor={getParticleColor}
         enableNodeDrag={false}
         enableNavigationControls={true}
         enablePointerInteraction={true}

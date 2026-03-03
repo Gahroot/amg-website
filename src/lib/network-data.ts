@@ -42,7 +42,7 @@ function ringPosition(index: number, total: number, radius: number) {
   return {
     x: radius * Math.cos(angle),
     y: radius * Math.sin(angle),
-    z: (Math.random() - 0.5) * 20, // slight z jitter for 3D depth
+    z: Math.sin(index * 2654435761) * 10, // deterministic z-jitter (avoids SSR/client hydration mismatch)
   };
 }
 

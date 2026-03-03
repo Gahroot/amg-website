@@ -76,15 +76,32 @@ export function Hero() {
       className="relative min-h-screen flex items-center justify-center lg:justify-end overflow-hidden"
     >
       {/* Fixed Background Video for parallax effect */}
-      <div ref={bgRef} className="fixed inset-0 z-0">
+      <div ref={bgRef} className="fixed inset-0 z-0 bg-black">
         <video
           autoPlay
           loop
           muted
           playsInline
+          preload="metadata"
+          poster="/images/hero-coastline-poster.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/videos/vecteezy_aerial-shot-a-dramatic-coastline-with-rugged-cliffs-and_48207478.mov" />
+          {/* Mobile: 720p MP4 (2 MB) */}
+          <source
+            src="/videos/hero-coastline-720p.mp4"
+            type="video/mp4"
+            media="(max-width: 767px)"
+          />
+          {/* Desktop: WebM first (4.5 MB, Chrome/Firefox/Edge) */}
+          <source
+            src="/videos/hero-coastline-1080p.webm"
+            type="video/webm"
+          />
+          {/* Desktop: MP4 fallback (5.6 MB, Safari/universal) */}
+          <source
+            src="/videos/hero-coastline-1080p.mp4"
+            type="video/mp4"
+          />
         </video>
       </div>
 

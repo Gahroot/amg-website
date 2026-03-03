@@ -19,10 +19,10 @@ vi.mock("next/link", () => ({
 }));
 
 describe("Footer", () => {
-  it("renders company name 'ANCHOR MILL GROUP'", () => {
+  it("renders company name 'Anchor Mill Group'", () => {
     render(<Footer />);
 
-    expect(screen.getByText("ANCHOR MILL GROUP")).toBeInTheDocument();
+    expect(screen.getByText("Anchor Mill Group")).toBeInTheDocument();
   });
 
   it("renders company description", () => {
@@ -30,7 +30,7 @@ describe("Footer", () => {
 
     expect(
       screen.getByText(
-        "Integrated resilience, protection, and performance for UHNW families and global executives."
+        /Comprehensive protection for a complex world/
       )
     ).toBeInTheDocument();
   });
@@ -39,31 +39,22 @@ describe("Footer", () => {
     render(<Footer />);
 
     const expectedLinks = [
-      "Home",
       "About",
-      "Strategies",
+      "Solutions",
       "How We Serve",
-      "Contact",
+      "Get in Touch",
     ];
     for (const label of expectedLinks) {
       expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
     }
   });
 
-  it("renders all 5 domain names", () => {
+  it("renders footer section headings", () => {
     render(<Footer />);
 
-    const domains = [
-      "Neurobiology & Performance",
-      "Cyber & Protective Security",
-      "Leadership Development",
-      "Integrative Medicine",
-      "Business Intelligence & Geopolitical Risk",
-    ];
-
-    for (const domain of domains) {
-      expect(screen.getByText(domain)).toBeInTheDocument();
-    }
+    expect(screen.getByText("Navigate")).toBeInTheDocument();
+    expect(screen.getByText("Platform")).toBeInTheDocument();
+    expect(screen.getByText("Connect")).toBeInTheDocument();
   });
 
   it("renders contact email", () => {
@@ -83,7 +74,7 @@ describe("Footer", () => {
     render(<Footer />);
 
     expect(
-      screen.getByText(/© 2025 Anchor Mill Group\. All rights reserved\./)
+      screen.getByText(/© 2026 Anchor Mill Group/)
     ).toBeInTheDocument();
   });
 

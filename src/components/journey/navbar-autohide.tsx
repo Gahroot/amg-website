@@ -104,10 +104,12 @@ export function NavbarAutohide({
     if (!progressBar) return;
 
     const updateProgress = () => {
+      const scrollableHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercent =
-        (window.scrollY /
-          (document.documentElement.scrollHeight - window.innerHeight)) *
-        100;
+        scrollableHeight > 0
+          ? (window.scrollY / scrollableHeight) * 100
+          : 0;
       progressBar.style.width = Math.min(scrollPercent, 100) + "%";
     };
 

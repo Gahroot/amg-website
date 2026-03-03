@@ -10,31 +10,11 @@ import React, { useRef, useLayoutEffect } from "react";
 import { VideoBackground } from "@/components/effects/video-background";
 import { heroContent } from "@/lib/journey-data";
 import { ArrowDown } from "lucide-react";
+import { loadGSAP } from "@/lib/gsap";
 
 interface JourneyHeroProps {
   videoSrc?: string;
   posterSrc?: string;
-}
-
-// Global GSAP instances
-let gsapInstance: typeof import("gsap").gsap | null = null;
-let ScrollTriggerInstance: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
-let gsapInitialized = false;
-
-async function getGSAP() {
-  if (typeof window === "undefined") return null;
-  if (gsapInitialized) return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
-
-  const gsapModule = await import("gsap");
-  const scrollTriggerModule = await import("gsap/ScrollTrigger");
-
-  gsapInstance = gsapModule.gsap;
-  ScrollTriggerInstance = scrollTriggerModule.ScrollTrigger;
-
-  gsapInstance.registerPlugin(ScrollTriggerInstance);
-  gsapInitialized = true;
-
-  return { gsap: gsapInstance, ScrollTrigger: ScrollTriggerInstance };
 }
 
 export function JourneyHero({ videoSrc, posterSrc }: JourneyHeroProps) {
@@ -43,14 +23,14 @@ export function JourneyHero({ videoSrc, posterSrc }: JourneyHeroProps) {
   const subtitleRef = useRef<HTMLDivElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
 
   useLayoutEffect(() => {
-    const setupAnimation = async () => {
-      const result = await getGSAP();
-      if (!result || !containerRef.current || !titleRef.current || !subtitleRef.current || !descriptionRef.current) return;
+    let mounted = true;
 
-      const { gsap } = result;
-      if (!gsap) return;
+    const setupAnimation = async () => {
+      const { gsap } = await loadGSAP();
+      if (!mounted || !containerRef.current || !titleRef.current || !subtitleRef.current || !descriptionRef.current) return;
 
       const container = containerRef.current;
       const title = titleRef.current;
@@ -120,18 +100,14 @@ export function JourneyHero({ videoSrc, posterSrc }: JourneyHeroProps) {
         });
       }, container);
 
-      (container as unknown as { _gsapContext?: gsap.Context })._gsapContext = ctx;
+      ctxRef.current = ctx;
     };
 
     setupAnimation();
 
-    // Capture ref value for cleanup
-    const container = containerRef.current;
     return () => {
-      if (container) {
-        const ctx = (container as unknown as { _gsapContext?: gsap.Context })._gsapContext;
-        if (ctx) ctx.revert();
-      }
+      mounted = false;
+      ctxRef.current?.revert();
     };
   }, []);
 

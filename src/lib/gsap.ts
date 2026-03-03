@@ -11,7 +11,7 @@ import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 
 // Check if we're on the client side
-export const isClient = typeof window !== "undefined";
+const isClient = typeof window !== "undefined";
 
 let initialized = false;
 
@@ -27,16 +27,25 @@ export function initGSAP(): void {
   initialized = true;
 }
 
-/**
- * Get the GSAP instance with plugins already registered
- * Automatically initializes on first call if not already done
- */
-export function getGSAP() {
-  if (isClient && !initialized) {
-    initGSAP();
-  }
-  return gsap;
-}
-
 // Export GSAP and plugins for direct use
 export { gsap, ScrollTrigger, SplitText, useGSAP };
+
+/**
+ * Dynamically import GSAP + ScrollTrigger with singleton guard.
+ * Use this in journey components for dynamic GSAP loading.
+ */
+let gsapModule: {
+  gsap: typeof import("gsap").gsap;
+  ScrollTrigger: typeof import("gsap/ScrollTrigger").ScrollTrigger;
+} | null = null;
+
+export async function loadGSAP() {
+  if (gsapModule) return gsapModule;
+  const [{ gsap: g }, { ScrollTrigger: ST }] = await Promise.all([
+    import("gsap"),
+    import("gsap/ScrollTrigger"),
+  ]);
+  g.registerPlugin(ST);
+  gsapModule = { gsap: g, ScrollTrigger: ST };
+  return gsapModule;
+}
