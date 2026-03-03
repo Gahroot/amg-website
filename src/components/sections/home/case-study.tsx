@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 /* ------------------------------------------------------------------ */
 /*  Timeline data                                                      */
@@ -29,33 +30,6 @@ const timeline = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Desktop + reduced-motion detection (same pattern as domains.tsx)    */
-/* ------------------------------------------------------------------ */
-
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getDesktopSnapshot() {
-  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-  return isDesktop && !reducedMotion;
-}
-
-function getDesktopServerSnapshot() {
-  return false;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -67,95 +41,167 @@ export function CaseStudy() {
   const entryRefs = useRef<(HTMLDivElement | null)[]>([]);
   const costRef = useRef<HTMLSpanElement>(null);
 
-  const canPin = useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getDesktopServerSnapshot,
-  );
+  const canPin = useCanPin();
+  const reducedMotion = useReducedMotion();
+
+  // Whether to render timeline elements (progress line, dots, refs)
+  const animated = canPin || !reducedMotion;
 
   useGSAP(
     () => {
-      if (!canPin) return;
-
       initGSAP();
 
-      const pinContainer = pinContainerRef.current;
       const progress = progressRef.current;
       const costEl = costRef.current;
-      if (!pinContainer || !progress || !costEl) return;
-
       const dots = dotRefs.current.filter(Boolean) as HTMLDivElement[];
       const entries = entryRefs.current.filter(Boolean) as HTMLDivElement[];
 
-      // Initial state
-      gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
-      gsap.set(dots, { scale: 0, autoAlpha: 0 });
-      gsap.set(entries, { autoAlpha: 0, y: 20 });
+      if (canPin) {
+        /* ── Desktop: pinned scroll animation ── */
+        const pinContainer = pinContainerRef.current;
+        if (!pinContainer || !progress || !costEl) return;
 
-      // Scrub-driven timeline with pinning
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: pinContainer,
-          start: "top top",
-          end: "+=100%",
-          scrub: 1,
-          pin: true,
-          invalidateOnRefresh: true,
-        },
-      });
+        gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
+        gsap.set(dots, { scale: 0, autoAlpha: 0 });
+        gsap.set(entries, { autoAlpha: 0, y: 20 });
 
-      // Grow progress line
-      tl.to(progress, {
-        scaleX: 1,
-        duration: 4,
-        ease: "none",
-      });
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: pinContainer,
+            start: "top top",
+            end: "+=100%",
+            scrub: 1,
+            pin: true,
+            invalidateOnRefresh: true,
+          },
+        });
 
-      // Stagger dots and text entries
-      entries.forEach((entry, i) => {
-        const dot = dots[i];
-        const offset = i * 1;
+        tl.to(progress, { scaleX: 1, duration: 4, ease: "none" });
 
-        if (dot) {
+        entries.forEach((entry, i) => {
+          const dot = dots[i];
+          const offset = i * 1;
+          if (dot) {
+            tl.to(
+              dot,
+              { scale: 1, autoAlpha: 1, duration: 0.3, ease: "back.out(2)" },
+              offset,
+            );
+          }
           tl.to(
-            dot,
-            { scale: 1, autoAlpha: 1, duration: 0.3, ease: "back.out(2)" },
-            offset,
+            entry,
+            { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" },
+            offset + 0.15,
           );
-        }
+        });
 
+        const proxy = { val: 0 };
         tl.to(
-          entry,
-          { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" },
-          offset + 0.15,
+          proxy,
+          {
+            val: 4.2,
+            duration: 4,
+            ease: "power2.in",
+            onUpdate() {
+              costEl.textContent = `$${proxy.val.toFixed(1)}M`;
+            },
+          },
+          0,
+        );
+
+        return () => {
+          tl.scrollTrigger?.kill();
+          tl.kill();
+        };
+      }
+
+      /* ── Mobile: scroll-triggered animations (no pin) ── */
+      if (reducedMotion) return;
+      if (!progress || !costEl) return;
+
+      const tweens: gsap.core.Tween[] = [];
+
+      // Progress line scrubbed to section
+      gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
+      tweens.push(
+        gsap.to(progress, {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 80%",
+            end: "bottom 60%",
+            scrub: true,
+          },
+        }),
+      );
+
+      // Dots pop on viewport entry
+      dots.forEach((dot) => {
+        gsap.set(dot, { scale: 0, autoAlpha: 0 });
+        tweens.push(
+          gsap.to(dot, {
+            scale: 1,
+            autoAlpha: 1,
+            duration: 0.3,
+            ease: "back.out(2)",
+            scrollTrigger: {
+              trigger: dot,
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          }),
         );
       });
 
-      // Cost counter synced to scroll (starts at 0, runs full duration)
+      // Timeline entries fade up
+      entries.forEach((entry) => {
+        gsap.set(entry, { autoAlpha: 0, y: 20 });
+        tweens.push(
+          gsap.to(entry, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: entry,
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          }),
+        );
+      });
+
+      // Cost counter scrubbed to scroll
       const proxy = { val: 0 };
-      tl.to(
-        proxy,
-        {
+      tweens.push(
+        gsap.to(proxy, {
           val: 4.2,
-          duration: 4,
           ease: "power2.in",
+          scrollTrigger: {
+            trigger: costEl,
+            start: "top 90%",
+            end: "top 40%",
+            scrub: true,
+          },
           onUpdate() {
             costEl.textContent = `$${proxy.val.toFixed(1)}M`;
           },
-        },
-        0,
+        }),
       );
 
       return () => {
-        tl.scrollTrigger?.kill();
-        tl.kill();
+        tweens.forEach((t) => {
+          t.scrollTrigger?.kill();
+          t.kill();
+        });
       };
     },
-    { scope: sectionRef, dependencies: [canPin] },
+    { scope: sectionRef, dependencies: [canPin, reducedMotion] },
   );
 
   /* Shared content renderer */
-  const renderTimeline = (animated: boolean) => (
+  const renderTimeline = () => (
     <>
       {/* Label */}
       <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
@@ -231,7 +277,7 @@ export function CaseStudy() {
       <div className="mt-12 text-center">
         <Link
           href="/how-we-serve"
-          className="font-mono text-xs uppercase tracking-widest text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-2"
+          className="font-mono text-xs uppercase tracking-widest text-primary hover:text-primary/80 active:text-primary/60 transition-colors inline-flex items-center gap-2"
         >
           See How We Prevent This
           <ArrowRight className="size-4" />
@@ -246,17 +292,17 @@ export function CaseStudy() {
         /* Desktop: pinned scroll container */
         <div
           ref={pinContainerRef}
-          className="h-screen overflow-hidden flex flex-col justify-center"
+          className="h-dvh overflow-hidden flex flex-col justify-center"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {renderTimeline(true)}
+            {renderTimeline()}
           </div>
         </div>
       ) : (
         /* Mobile / reduced-motion: static layout */
         <div className="py-24 lg:py-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {renderTimeline(false)}
+            {renderTimeline()}
           </div>
         </div>
       )}

@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useCallback, useSyncExternalStore } from "react";
+import { useRef, useCallback } from "react";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 /* ------------------------------------------------------------------ */
 /*  Engagement data                                                    */
@@ -35,32 +37,6 @@ const pillars = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Scroll-pin media queries (same pattern as problem.tsx)             */
-/* ------------------------------------------------------------------ */
-
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getCanPinSnapshot() {
-  return (
-    window.matchMedia("(min-width: 768px)").matches &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-function getCanPinServerSnapshot() {
-  return false;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -73,11 +49,8 @@ export function EngagementModel() {
   const connectorRefs = useRef<(HTMLDivElement | null)[]>([]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const canPin = useSyncExternalStore(
-    subscribeToDesktop,
-    getCanPinSnapshot,
-    getCanPinServerSnapshot
-  );
+  const canPin = useCanPin();
+  const reducedMotion = useReducedMotion();
 
   const setNodeRef = useCallback(
     (i: number) => (el: HTMLDivElement | null) => {
@@ -214,53 +187,146 @@ export function EngagementModel() {
           {/* Schematic area */}
           <div className="relative max-w-2xl">
             {/* Hub marker */}
-            <div ref={hubRef} className="flex items-center gap-3 mb-10">
-              <div className="w-2.5 h-2.5 bg-primary rotate-45 shrink-0" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/70">
-                Operational Architecture
-              </span>
-            </div>
+            {canPin || reducedMotion ? (
+              <div ref={hubRef} className="flex items-center gap-3 mb-10">
+                <div className="w-2.5 h-2.5 bg-primary rotate-45 shrink-0" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/70">
+                  Operational Architecture
+                </span>
+              </div>
+            ) : (
+              <motion.div
+                ref={hubRef}
+                className="flex items-center gap-3 mb-10"
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="w-2.5 h-2.5 bg-primary rotate-45 shrink-0" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/70">
+                  Operational Architecture
+                </span>
+              </motion.div>
+            )}
 
             {/* Cards with spine */}
             <div className="relative pl-12">
               {/* Spine */}
-              <div
-                ref={spineRef}
-                className="absolute left-[7px] top-0 bottom-0 w-px bg-primary/20"
-              />
+              {canPin || reducedMotion ? (
+                <div
+                  ref={spineRef}
+                  className="absolute left-[7px] top-0 bottom-0 w-px bg-primary/20"
+                />
+              ) : (
+                <motion.div
+                  ref={spineRef}
+                  className="absolute left-[7px] top-0 bottom-0 w-px bg-primary/20 origin-top"
+                  initial={{ scaleY: 0 }}
+                  whileInView={{ scaleY: 1 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+              )}
 
               {/* Card list */}
               <div className="space-y-10">
-                {pillars.map((pillar, i) => (
-                  <div key={pillar.title} className="flex items-start">
-                    {/* Left side: node dot + connector */}
-                    <div className="flex items-center shrink-0 mt-1.5 -ml-12">
-                      {/* Node dot */}
-                      <div
-                        ref={setNodeRef(i)}
-                        className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
-                      />
-                      {/* Connector */}
-                      <div
-                        ref={setConnectorRef(i)}
-                        className="w-10 h-px bg-primary/20 ml-px"
-                      />
-                    </div>
+                {pillars.map((pillar, i) => {
+                  if (canPin) {
+                    return (
+                      <div key={pillar.title} className="flex items-start">
+                        <div className="flex items-center shrink-0 mt-1.5 -ml-12">
+                          <div
+                            ref={setNodeRef(i)}
+                            className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
+                          />
+                          <div
+                            ref={setConnectorRef(i)}
+                            className="w-10 h-px bg-primary/20 ml-px"
+                          />
+                        </div>
+                        <div ref={setCardRef(i)} className="ml-1">
+                          <span className="text-xl text-primary leading-none">
+                            {pillar.symbol}
+                          </span>
+                          <h4 className="font-mono text-sm uppercase tracking-widest font-semibold mt-2 mb-2 text-foreground">
+                            {pillar.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {pillar.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
 
-                    {/* Card content */}
-                    <div ref={setCardRef(i)} className="ml-1">
-                      <span className="text-xl text-primary leading-none">
-                        {pillar.symbol}
-                      </span>
-                      <h4 className="font-mono text-sm uppercase tracking-widest font-semibold mt-2 mb-2 text-foreground">
-                        {pillar.title}
-                      </h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {pillar.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  if (reducedMotion) {
+                    return (
+                      <div key={pillar.title} className="flex items-start">
+                        <div className="flex items-center shrink-0 mt-1.5 -ml-12">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                          <div className="w-10 h-px bg-primary/20 ml-px" />
+                        </div>
+                        <div className="ml-1">
+                          <span className="text-xl text-primary leading-none">
+                            {pillar.symbol}
+                          </span>
+                          <h4 className="font-mono text-sm uppercase tracking-widest font-semibold mt-2 mb-2 text-foreground">
+                            {pillar.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {pillar.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <motion.div
+                      key={pillar.title}
+                      className="flex items-start"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true, margin: "-60px" }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      <div className="flex items-center shrink-0 mt-1.5 -ml-12">
+                        <motion.div
+                          className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
+                          initial={{ scale: 0 }}
+                          whileInView={{ scale: 1 }}
+                          viewport={{ once: true, margin: "-60px" }}
+                          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                        />
+                        <motion.div
+                          className="w-10 h-px bg-primary/20 ml-px origin-left"
+                          initial={{ scaleX: 0 }}
+                          whileInView={{ scaleX: 1 }}
+                          viewport={{ once: true, margin: "-60px" }}
+                          transition={{ duration: 0.3, delay: 0.15, ease: "easeOut" }}
+                        />
+                      </div>
+                      <motion.div
+                        className="ml-1"
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-60px" }}
+                        transition={{ duration: 0.4, delay: 0.25, ease: "easeOut" }}
+                      >
+                        <span className="text-xl text-primary leading-none">
+                          {pillar.symbol}
+                        </span>
+                        <h4 className="font-mono text-sm uppercase tracking-widest font-semibold mt-2 mb-2 text-foreground">
+                          {pillar.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {pillar.description}
+                        </p>
+                      </motion.div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </div>

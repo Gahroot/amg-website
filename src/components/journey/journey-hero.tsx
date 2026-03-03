@@ -114,7 +114,7 @@ export function JourneyHero({ videoSrc, posterSrc }: JourneyHeroProps) {
   return (
     <section
       ref={containerRef}
-      className="journey-hero relative h-screen w-full overflow-hidden flex items-center justify-center bg-foreground"
+      className="journey-hero relative h-dvh w-full overflow-hidden flex items-center justify-center bg-foreground"
     >
       {videoSrc && (
         <VideoBackground

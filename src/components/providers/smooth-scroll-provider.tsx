@@ -49,14 +49,21 @@ export function SmoothScrollProvider({
   children: React.ReactNode;
 }) {
   const getOptions = useCallback(() => {
-    const reducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof window === "undefined") {
+      return { lerp: 0.1, duration: 1.2, smoothWheel: true, autoRaf: false };
+    }
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+    const disabled = reducedMotion || isMobile;
 
     return {
-      lerp: reducedMotion ? 1 : 0.1,
-      duration: reducedMotion ? 0 : 1.2,
-      smoothWheel: !reducedMotion,
+      lerp: disabled ? 1 : 0.1,
+      duration: disabled ? 0 : 1.2,
+      smoothWheel: !disabled,
       autoRaf: false, // GSAP ticker drives Lenis — no double RAF
     };
   }, []);

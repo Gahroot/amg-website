@@ -78,6 +78,7 @@ export function BlindSpots() {
                 alt="Light emerging through fog — revealing what was hidden in blind spots"
                 fill
                 className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
           </div>

@@ -86,7 +86,7 @@ export function Navbar() {
             {/* Menu trigger */}
             <button
               onClick={() => setNavOpen(true)}
-              className={`font-mono text-xs uppercase tracking-widest hover:opacity-80 transition-opacity duration-300 py-2 ${
+              className={`font-mono text-xs uppercase tracking-widest hover:opacity-80 active:opacity-60 transition-opacity duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center ${
                 isSolid ? "text-muted-foreground" : "text-white"
               }`}
               aria-label="Open navigation menu"

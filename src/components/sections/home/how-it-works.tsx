@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useCallback, useSyncExternalStore } from "react";
+import { useRef, useCallback } from "react";
 import Image from "next/image";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 /* ------------------------------------------------------------------ */
 /*  Steps data                                                         */
@@ -36,32 +38,6 @@ const steps = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Media query hooks (useSyncExternalStore)                           */
-/* ------------------------------------------------------------------ */
-
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getCanPinSnapshot() {
-  return (
-    window.matchMedia("(min-width: 768px)").matches &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-function getCanPinServerSnapshot() {
-  return false;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -71,11 +47,8 @@ export function HowItWorks() {
   const imageRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const canPin = useSyncExternalStore(
-    subscribeToDesktop,
-    getCanPinSnapshot,
-    getCanPinServerSnapshot
-  );
+  const canPin = useCanPin();
+  const reducedMotion = useReducedMotion();
 
   const setStepRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -185,40 +158,89 @@ export function HowItWorks() {
           {/* Two-column grid (desktop) or single column (mobile) */}
           <div className={canPin ? "grid grid-cols-2 gap-16" : ""}>
             {/* Compass image */}
-            <div className={canPin ? "relative" : "mb-12"}>
-              <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
-                <Image
-                  src="/images/compass.jpg"
-                  alt="Antique compass pointing north — symbol of decisive direction through complexity"
-                  fill
-                  className="object-cover"
-                />
+            {canPin || reducedMotion ? (
+              <div className={canPin ? "relative" : "mb-12"}>
+                <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
+                  <Image
+                    src="/images/compass.jpg"
+                    alt="Antique compass pointing north — symbol of decisive direction through complexity"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <motion.div
+                className="mb-12"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
+                  <Image
+                    src="/images/compass.jpg"
+                    alt="Antique compass pointing north — symbol of decisive direction through complexity"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              </motion.div>
+            )}
 
             {/* Numbered steps */}
             <div className="flex flex-col justify-center">
-              {steps.map((step, i) => (
-                <div
-                  key={step.number}
-                  ref={setStepRef(i)}
-                  className={
-                    i < steps.length - 1
-                      ? "border-b border-[rgba(26,23,20,0.15)] pb-8 mb-8"
-                      : ""
-                  }
-                >
-                  <span className="font-serif italic text-4xl text-primary leading-none">
-                    {step.number}
-                  </span>
-                  <h3 className="font-mono text-sm uppercase tracking-widest font-semibold mt-3 mb-2">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
+              {steps.map((step, i) => {
+                const stepContent = (
+                  <>
+                    <span className="font-serif italic text-4xl text-primary leading-none">
+                      {step.number}
+                    </span>
+                    <h3 className="font-mono text-sm uppercase tracking-widest font-semibold mt-3 mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {step.description}
+                    </p>
+                  </>
+                );
+
+                const borderClass =
+                  i < steps.length - 1
+                    ? "border-b border-[rgba(26,23,20,0.15)] pb-8 mb-8"
+                    : "";
+
+                if (canPin) {
+                  return (
+                    <div key={step.number} ref={setStepRef(i)} className={borderClass}>
+                      {stepContent}
+                    </div>
+                  );
+                }
+
+                if (reducedMotion) {
+                  return (
+                    <div key={step.number} className={borderClass}>
+                      {stepContent}
+                    </div>
+                  );
+                }
+
+                return (
+                  <motion.div
+                    key={step.number}
+                    className={borderClass}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    {stepContent}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>

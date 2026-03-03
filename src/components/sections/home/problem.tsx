@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useCallback, useSyncExternalStore } from "react";
+import { useRef, useCallback } from "react";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 const challenges = [
   {
@@ -33,39 +35,14 @@ const challenges = [
 const CALLOUT_TEXT =
   "AMG brings order to chaos. One integrated platform across every domain of risk.";
 
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getCanPinSnapshot() {
-  return (
-    window.matchMedia("(min-width: 768px)").matches &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-function getCanPinServerSnapshot() {
-  return false;
-}
-
 export function Problem() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const challengeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const calloutRef = useRef<HTMLDivElement>(null);
 
-  const canPin = useSyncExternalStore(
-    subscribeToDesktop,
-    getCanPinSnapshot,
-    getCanPinServerSnapshot
-  );
+  const canPin = useCanPin();
+  const reducedMotion = useReducedMotion();
 
   const setChallengeRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -165,33 +142,87 @@ export function Problem() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-            {challenges.map((challenge, i) => (
-              <div
-                key={challenge.number}
-                ref={setChallengeRef(i)}
-                className="border-t border-[rgba(26,23,20,0.15)] pt-6"
-              >
-                <span className="font-serif italic text-2xl text-primary leading-none">
-                  {challenge.number}
-                </span>
-                <h3 className="font-serif text-xl sm:text-2xl tracking-tight mt-3 mb-2">
-                  {challenge.title}
-                </h3>
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  {challenge.description}
-                </p>
-              </div>
-            ))}
+            {challenges.map((challenge, i) => {
+              const cardContent = (
+                <>
+                  <span className="font-serif italic text-2xl text-primary leading-none">
+                    {challenge.number}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl tracking-tight mt-3 mb-2">
+                    {challenge.title}
+                  </h3>
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    {challenge.description}
+                  </p>
+                </>
+              );
+
+              if (canPin) {
+                return (
+                  <div
+                    key={challenge.number}
+                    ref={setChallengeRef(i)}
+                    className="border-t border-[rgba(26,23,20,0.15)] pt-6"
+                  >
+                    {cardContent}
+                  </div>
+                );
+              }
+
+              if (reducedMotion) {
+                return (
+                  <div
+                    key={challenge.number}
+                    className="border-t border-[rgba(26,23,20,0.15)] pt-6"
+                  >
+                    {cardContent}
+                  </div>
+                );
+              }
+
+              return (
+                <motion.div
+                  key={challenge.number}
+                  className="border-t border-[rgba(26,23,20,0.15)] pt-6"
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  {cardContent}
+                </motion.div>
+              );
+            })}
           </div>
 
-          <div
-            ref={calloutRef}
-            className="mt-16 rounded-lg bg-charcoal text-[#e8e4dc] px-8 py-10 sm:px-12 sm:py-12"
-          >
-            <p className="font-serif text-xl sm:text-2xl md:text-3xl leading-snug tracking-tight max-w-3xl italic">
-              &ldquo;{CALLOUT_TEXT}&rdquo;
-            </p>
-          </div>
+          {canPin ? (
+            <div
+              ref={calloutRef}
+              className="mt-16 rounded-lg bg-charcoal text-[#e8e4dc] px-6 py-8 sm:px-12 sm:py-12"
+            >
+              <p className="font-serif text-xl sm:text-2xl md:text-3xl leading-snug tracking-tight max-w-3xl italic">
+                &ldquo;{CALLOUT_TEXT}&rdquo;
+              </p>
+            </div>
+          ) : reducedMotion ? (
+            <div className="mt-16 rounded-lg bg-charcoal text-[#e8e4dc] px-6 py-8 sm:px-12 sm:py-12">
+              <p className="font-serif text-xl sm:text-2xl md:text-3xl leading-snug tracking-tight max-w-3xl italic">
+                &ldquo;{CALLOUT_TEXT}&rdquo;
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              className="mt-16 rounded-lg bg-charcoal text-[#e8e4dc] px-6 py-8 sm:px-12 sm:py-12"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <p className="font-serif text-xl sm:text-2xl md:text-3xl leading-snug tracking-tight max-w-3xl italic">
+                &ldquo;{CALLOUT_TEXT}&rdquo;
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>

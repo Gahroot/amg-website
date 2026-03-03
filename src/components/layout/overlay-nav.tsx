@@ -108,7 +108,7 @@ export function OverlayNav({ open, onClose }: OverlayNavProps) {
         <div className="flex justify-end p-6 md:p-10">
           <button
             onClick={onClose}
-            className="overlay-nav-close text-[#e8e4dc] hover:text-white transition-colors"
+            className="overlay-nav-close text-[#e8e4dc] hover:text-white active:text-white/80 transition-colors p-2.5 -m-2.5"
             aria-label="Close navigation"
           >
             <X className="size-6" />
@@ -124,7 +124,7 @@ export function OverlayNav({ open, onClose }: OverlayNavProps) {
                 key={link.href}
                 href={link.href}
                 onClick={onClose}
-                className="overlay-nav-link font-serif text-3xl md:text-5xl lg:text-6xl text-[#e8e4dc] hover:text-white transition-colors leading-tight"
+                className="overlay-nav-link font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#e8e4dc] hover:text-white active:text-white/80 transition-colors leading-tight"
               >
                 {link.label}
               </Link>
@@ -160,7 +160,7 @@ export function OverlayNav({ open, onClose }: OverlayNavProps) {
               onClick={() =>
                 setTheme(resolvedTheme === "dark" ? "light" : "dark")
               }
-              className="flex items-center gap-2 text-[#e8e4dc]/60 hover:text-white transition-colors text-sm mt-4"
+              className="flex items-center gap-2 text-[#e8e4dc]/60 hover:text-white active:text-white/80 transition-colors text-sm mt-4"
               aria-label="Toggle theme"
             >
               <Sun className="size-4 hidden dark:block" />

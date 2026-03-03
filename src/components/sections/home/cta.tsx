@@ -49,7 +49,7 @@ export function CTA() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative min-h-dvh flex items-center justify-center overflow-hidden"
     >
       {/* Background image - storm breaking with light emerging */}
       <div
@@ -62,14 +62,15 @@ export function CTA() {
           alt="Storm clouds parting to reveal golden light — chaos turning into clarity"
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 w-full py-20">
+      <div className="relative z-10 w-full py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl tracking-tight text-[#e8e4dc] mb-4">
+          <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight text-[#e8e4dc] mb-4">
             Turn Chaos Into Control
           </h2>
           <p className="font-mono text-xs uppercase tracking-widest text-[#e8e4dc]/60 mb-8">
@@ -78,14 +79,14 @@ export function CTA() {
 
           <a
             href={`mailto:${siteConfig.email}`}
-            className="text-sm text-[#e8e4dc]/60 hover:text-[#e8e4dc] transition-colors mb-10 block"
+            className="text-sm text-[#e8e4dc]/60 hover:text-[#e8e4dc] active:text-[#e8e4dc]/80 transition-colors mb-10 block"
           >
             {siteConfig.email}
           </a>
 
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 px-8 py-3 border border-[#e8e4dc]/30 text-[#e8e4dc] hover:bg-[#e8e4dc]/10 font-mono text-xs uppercase tracking-widest transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3 border border-[#e8e4dc]/30 text-[#e8e4dc] hover:bg-[#e8e4dc]/10 active:bg-[#e8e4dc]/15 font-mono text-xs uppercase tracking-widest transition-colors"
           >
             Begin Your Discovery
             <ArrowRight className="size-3.5" />

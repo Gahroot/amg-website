@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
@@ -8,6 +8,16 @@ import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // On mobile, force 720p source since <source media=""> is ignored in <video>
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      video.src = "/videos/hero-coastline-720p.mp4";
+    }
+  }, []);
 
   useGSAP(
     () => {
@@ -78,6 +88,7 @@ export function Hero() {
       {/* Fixed Background Video for parallax effect */}
       <div ref={bgRef} className="fixed inset-0 z-0 bg-black">
         <video
+          ref={videoRef}
           autoPlay
           loop
           muted
@@ -86,12 +97,6 @@ export function Hero() {
           poster="/images/hero-coastline-poster.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          {/* Mobile: 720p MP4 (2 MB) */}
-          <source
-            src="/videos/hero-coastline-720p.mp4"
-            type="video/mp4"
-            media="(max-width: 767px)"
-          />
           {/* Desktop: WebM first (4.5 MB, Chrome/Firefox/Edge) */}
           <source
             src="/videos/hero-coastline-1080p.webm"
@@ -127,10 +132,10 @@ export function Hero() {
         {/* CTA */}
         <Link
           href="/contact"
-          className="hero-cta inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-white hover:text-primary transition-colors group"
+          className="hero-cta inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-white hover:text-primary active:text-primary/80 transition-colors group"
         >
           Begin a Conversation
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1 group-active:translate-x-1" />
         </Link>
       </div>
     </section>

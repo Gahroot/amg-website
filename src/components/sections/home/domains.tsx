@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 const domains = [
   {
@@ -66,39 +68,13 @@ const domains = [
   },
 ];
 
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getDesktopSnapshot() {
-  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-  return isDesktop && !reducedMotion;
-}
-
-function getDesktopServerSnapshot() {
-  return false;
-}
-
 export function Domains() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const panelsRef = useRef<HTMLDivElement>(null);
 
-  const canPin = useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getDesktopServerSnapshot
-  );
+  const canPin = useCanPin();
+  const reducedMotion = useReducedMotion();
 
   useGSAP(
     () => {
@@ -136,7 +112,7 @@ export function Domains() {
     <section ref={sectionRef} id="domains" className="overflow-hidden">
       {canPin ? (
         /* Desktop: GSAP horizontal scroll — header inside pinned container */
-        <div ref={trackRef} className="h-screen overflow-hidden flex flex-col">
+        <div ref={trackRef} className="h-dvh overflow-hidden flex flex-col">
           <div className="pt-24 pb-8 flex-shrink-0">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
@@ -205,39 +181,69 @@ export function Domains() {
             </h2>
           </div>
           <div className="max-w-7xl mx-auto">
-            {domains.map((domain, index) => (
-              <div
-                key={domain.number}
-                className={`py-10 ${
-                  index < domains.length - 1
-                    ? "border-b border-[rgba(26,23,20,0.15)]"
-                    : ""
-                }`}
-              >
-                <span
-                  className="font-serif italic text-8xl text-primary/10 block leading-none mb-2 select-none"
-                  aria-hidden="true"
+            {domains.map((domain, index) => {
+              const cardContent = (
+                <>
+                  <motion.span
+                    className="font-serif italic text-8xl text-primary/10 block leading-none mb-2 select-none"
+                    aria-hidden="true"
+                    {...(!reducedMotion
+                      ? {
+                          initial: { opacity: 0, scale: 0.9 },
+                          whileInView: { opacity: 1, scale: 1 },
+                          viewport: { once: true, margin: "-60px" },
+                          transition: { duration: 0.5, ease: "easeOut" },
+                        }
+                      : {})}
+                  >
+                    {domain.number}
+                  </motion.span>
+                  <h3 className="font-serif text-3xl tracking-tight mb-4">
+                    {domain.title}
+                  </h3>
+                  <p className="text-lg text-muted-foreground max-w-lg mb-6">
+                    {domain.description}
+                  </p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                    {domain.capabilities.map((cap) => (
+                      <span
+                        key={cap}
+                        className="font-mono text-sm text-foreground"
+                      >
+                        {cap}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              );
+
+              const borderClass = `py-10 ${
+                index < domains.length - 1
+                  ? "border-b border-[rgba(26,23,20,0.15)]"
+                  : ""
+              }`;
+
+              if (reducedMotion) {
+                return (
+                  <div key={domain.number} className={borderClass}>
+                    {cardContent}
+                  </div>
+                );
+              }
+
+              return (
+                <motion.div
+                  key={domain.number}
+                  className={borderClass}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
                 >
-                  {domain.number}
-                </span>
-                <h3 className="font-serif text-3xl tracking-tight mb-4">
-                  {domain.title}
-                </h3>
-                <p className="text-lg text-muted-foreground max-w-lg mb-6">
-                  {domain.description}
-                </p>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  {domain.capabilities.map((cap) => (
-                    <span
-                      key={cap}
-                      className="font-mono text-sm text-foreground"
-                    >
-                      {cap}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+                  {cardContent}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       )}

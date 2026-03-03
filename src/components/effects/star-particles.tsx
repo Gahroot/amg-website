@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useSyncExternalStore } from "react";
+import { useMemo, useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/lib/use-can-pin";
 
 interface StarParticlesProps {
   className?: string;
@@ -58,15 +59,7 @@ export function StarParticles({
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: false, margin: "100px" });
 
-  const reducedMotion = useSyncExternalStore(
-    (cb) => {
-      const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-      mql.addEventListener("change", cb);
-      return () => mql.removeEventListener("change", cb);
-    },
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    () => false,
-  );
+  const reducedMotion = useReducedMotion();
 
   return (
     <div

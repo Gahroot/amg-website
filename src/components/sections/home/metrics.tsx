@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
+import { useCanPin, useReducedMotion } from "@/lib/use-can-pin";
 
 /* ------------------------------------------------------------------ */
 /*  Data types & constants                                             */
@@ -99,32 +101,6 @@ function formatTransform(m: TransformMetric, value: number): string {
   return `${num}${m.suffix}`;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Desktop + reduced-motion detection                                 */
-/* ------------------------------------------------------------------ */
-
-function subscribeToDesktop(cb: () => void) {
-  const mql = window.matchMedia("(min-width: 768px)");
-  const mqlMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", cb);
-  mqlMotion.addEventListener("change", cb);
-  return () => {
-    mql.removeEventListener("change", cb);
-    mqlMotion.removeEventListener("change", cb);
-  };
-}
-
-function getDesktopSnapshot() {
-  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-  return isDesktop && !reducedMotion;
-}
-
-function getDesktopServerSnapshot() {
-  return false;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Collect all transform metrics with their indices                   */
@@ -175,155 +151,174 @@ export function Metrics() {
   const categoryLabelRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
   const categoryDividerRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  const canAnimate = useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getDesktopServerSnapshot,
-  );
+  const canAnimate = useCanPin();
+  const reducedMotion = useReducedMotion();
 
   useGSAP(
     () => {
-      if (!canAnimate) return;
-
       initGSAP();
 
       const section = sectionRef.current;
-      const pinContainer = pinContainerRef.current;
-      const beforeTitle = beforeTitleRef.current;
-      const afterTitle = afterTitleRef.current;
-      if (!section || !pinContainer || !beforeTitle || !afterTitle) return;
+      if (!section) return;
 
-      // Read CSS color tokens for color tweens
-      const styles = getComputedStyle(section);
-      const mutedColor = styles.getPropertyValue("--muted-foreground").trim();
-      const fgColor = styles.getPropertyValue("--foreground").trim();
+      if (canAnimate) {
+        /* ── Desktop: full scroll-pinned animation ── */
+        const pinContainer = pinContainerRef.current;
+        const beforeTitle = beforeTitleRef.current;
+        const afterTitle = afterTitleRef.current;
+        if (!pinContainer || !beforeTitle || !afterTitle) return;
 
-      // Collect DOM elements
-      const transformCards: { el: HTMLDivElement; numEl: HTMLSpanElement; entry: TransformEntry }[] = [];
+        const styles = getComputedStyle(section);
+        const mutedColor = styles.getPropertyValue("--muted-foreground").trim();
+        const fgColor = styles.getPropertyValue("--foreground").trim();
+
+        const transformCards: { el: HTMLDivElement; numEl: HTMLSpanElement; entry: TransformEntry }[] = [];
+        for (const entry of transformEntries) {
+          const key = `${entry.catIndex}-${entry.slotIndex}`;
+          const cardEl = transformCardRefs.current.get(key);
+          const numEl = transformNumberRefs.current.get(key);
+          if (cardEl && numEl) {
+            transformCards.push({ el: cardEl, numEl, entry });
+          }
+        }
+
+        const staticCards: HTMLDivElement[] = [];
+        categories.forEach((cat, ci) => {
+          [cat.slot1, cat.slot2].forEach((slot, si) => {
+            if (slot.kind === "static") {
+              const el = staticCardRefs.current.get(`${ci}-${si}`);
+              if (el) staticCards.push(el);
+            }
+          });
+        });
+
+        const categoryLabels: HTMLSpanElement[] = [];
+        const categoryDividers: HTMLDivElement[] = [];
+        categories.forEach((_, ci) => {
+          const label = categoryLabelRefs.current.get(ci);
+          const divider = categoryDividerRefs.current.get(ci);
+          if (label) categoryLabels.push(label);
+          if (divider) categoryDividers.push(divider);
+        });
+
+        gsap.set(beforeTitle, { autoAlpha: 1 });
+        gsap.set(afterTitle, { autoAlpha: 0 });
+
+        transformCards.forEach(({ el, numEl, entry }) => {
+          const offset = scatterOffsets[entry.scatterIndex];
+          gsap.set(el, { x: offset.x, y: offset.y, rotate: offset.rotate });
+          gsap.set(numEl, { color: mutedColor });
+        });
+
+        gsap.set(staticCards, { autoAlpha: 0, y: 16 });
+        gsap.set(categoryLabels, { autoAlpha: 0 });
+        gsap.set(categoryDividers, { autoAlpha: 0 });
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: pinContainer,
+            start: "top top",
+            end: "+=200%",
+            scrub: 0.6,
+            pin: true,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        const proxies = transformCards.map(({ numEl, entry }) => {
+          const proxy = { val: entry.metric.from };
+          tl.to(
+            proxy,
+            {
+              val: entry.metric.to,
+              duration: 55,
+              ease: "power2.inOut",
+              onUpdate() {
+                numEl.textContent = formatTransform(entry.metric, proxy.val);
+              },
+            },
+            0,
+          );
+          return proxy;
+        });
+
+        transformCards.forEach(({ el }) => {
+          tl.to(
+            el,
+            { x: 0, y: 0, rotate: 0, duration: 55, ease: "power2.inOut" },
+            0,
+          );
+        });
+
+        transformCards.forEach(({ numEl }) => {
+          tl.to(
+            numEl,
+            { color: fgColor, duration: 55, ease: "power2.inOut" },
+            0,
+          );
+        });
+
+        tl.to(beforeTitle, { autoAlpha: 0, duration: 15, ease: "power2.inOut" }, 20);
+        tl.to(afterTitle, { autoAlpha: 1, duration: 15, ease: "power2.inOut" }, 25);
+
+        tl.to(categoryLabels, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
+        tl.to(categoryDividers, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
+
+        tl.to(
+          staticCards,
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 25,
+            ease: "power2.out",
+            stagger: 0.08 * 25,
+          },
+          55,
+        );
+
+        return () => {
+          void proxies;
+          tl.scrollTrigger?.kill();
+          tl.kill();
+        };
+      }
+
+      /* ── Mobile: GSAP scroll-scrubbed number morphing (no pin) ── */
+      if (reducedMotion) return;
+
+      const triggers: gsap.core.Tween[] = [];
+
       for (const entry of transformEntries) {
         const key = `${entry.catIndex}-${entry.slotIndex}`;
         const cardEl = transformCardRefs.current.get(key);
         const numEl = transformNumberRefs.current.get(key);
-        if (cardEl && numEl) {
-          transformCards.push({ el: cardEl, numEl, entry });
-        }
+        if (!cardEl || !numEl) continue;
+
+        const proxy = { val: entry.metric.from };
+        const tween = gsap.to(proxy, {
+          val: entry.metric.to,
+          ease: "power2.inOut",
+          scrollTrigger: {
+            trigger: cardEl,
+            start: "top 85%",
+            end: "top 40%",
+            scrub: true,
+          },
+          onUpdate() {
+            numEl.textContent = formatTransform(entry.metric, proxy.val);
+          },
+        });
+        triggers.push(tween);
       }
 
-      const staticCards: HTMLDivElement[] = [];
-      categories.forEach((cat, ci) => {
-        [cat.slot1, cat.slot2].forEach((slot, si) => {
-          if (slot.kind === "static") {
-            const el = staticCardRefs.current.get(`${ci}-${si}`);
-            if (el) staticCards.push(el);
-          }
-        });
-      });
-
-      const categoryLabels: HTMLSpanElement[] = [];
-      const categoryDividers: HTMLDivElement[] = [];
-      categories.forEach((_, ci) => {
-        const label = categoryLabelRefs.current.get(ci);
-        const divider = categoryDividerRefs.current.get(ci);
-        if (label) categoryLabels.push(label);
-        if (divider) categoryDividers.push(divider);
-      });
-
-      // Phase 1 — Initial state
-      // Before title visible, after title hidden
-      gsap.set(beforeTitle, { autoAlpha: 1 });
-      gsap.set(afterTitle, { autoAlpha: 0 });
-
-      // Transform cards: scattered positions, muted color
-      transformCards.forEach(({ el, numEl, entry }) => {
-        const offset = scatterOffsets[entry.scatterIndex];
-        gsap.set(el, { x: offset.x, y: offset.y, rotate: offset.rotate });
-        gsap.set(numEl, { color: mutedColor });
-      });
-
-      // Static cards, category labels, dividers: hidden
-      gsap.set(staticCards, { autoAlpha: 0, y: 16 });
-      gsap.set(categoryLabels, { autoAlpha: 0 });
-      gsap.set(categoryDividers, { autoAlpha: 0 });
-
-      // Build scroll-scrubbed timeline
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: pinContainer,
-          start: "top top",
-          end: "+=200%",
-          scrub: 0.6,
-          pin: true,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      // ── Phase 2: Transformation (0–55% of timeline) ──
-
-      // Number morphing via proxy objects
-      const proxies = transformCards.map(({ numEl, entry }) => {
-        const proxy = { val: entry.metric.from };
-        tl.to(
-          proxy,
-          {
-            val: entry.metric.to,
-            duration: 55,
-            ease: "power2.inOut",
-            onUpdate() {
-              numEl.textContent = formatTransform(entry.metric, proxy.val);
-            },
-          },
-          0,
-        );
-        return proxy;
-      });
-
-      // Settle scatter offsets to 0
-      transformCards.forEach(({ el }) => {
-        tl.to(
-          el,
-          { x: 0, y: 0, rotate: 0, duration: 55, ease: "power2.inOut" },
-          0,
-        );
-      });
-
-      // Color shift: muted → foreground
-      transformCards.forEach(({ numEl }) => {
-        tl.to(
-          numEl,
-          { color: fgColor, duration: 55, ease: "power2.inOut" },
-          0,
-        );
-      });
-
-      // Title crossfade (middle of phase 2)
-      tl.to(beforeTitle, { autoAlpha: 0, duration: 15, ease: "power2.inOut" }, 20);
-      tl.to(afterTitle, { autoAlpha: 1, duration: 15, ease: "power2.inOut" }, 25);
-
-      // Category labels begin fading in (tail of phase 2)
-      tl.to(categoryLabels, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
-      tl.to(categoryDividers, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
-
-      // ── Phase 3: Reveal static metrics (55–100%) ──
-      tl.to(
-        staticCards,
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 25,
-          ease: "power2.out",
-          stagger: 0.08 * 25,
-        },
-        55,
-      );
-
       return () => {
-        // Suppress unused var warnings — proxies kept alive for GSAP callbacks
-        void proxies;
-        tl.scrollTrigger?.kill();
-        tl.kill();
+        triggers.forEach((t) => {
+          t.scrollTrigger?.kill();
+          t.kill();
+        });
       };
     },
-    { scope: sectionRef, dependencies: [canAnimate] },
+    { scope: sectionRef, dependencies: [canAnimate, reducedMotion] },
   );
 
   /* ---------------------------------------------------------------- */
@@ -336,9 +331,11 @@ export function Metrics() {
     slotIndex: number,
   ) {
     const key = `${catIndex}-${slotIndex}`;
+    const mobileAnimated = !canAnimate && !reducedMotion;
 
     if (slot.kind === "transform") {
-      const isAnimated = canAnimate;
+      // Show `from` value when animated (desktop or mobile GSAP morph), `to` when static
+      const showFrom = canAnimate || mobileAnimated;
       return (
         <div
           key={key}
@@ -351,9 +348,9 @@ export function Metrics() {
               if (el) transformNumberRefs.current.set(key, el);
             }}
             className="block font-serif text-4xl md:text-5xl tabular-nums"
-            style={isAnimated ? { color: "var(--muted-foreground)" } : undefined}
+            style={canAnimate ? { color: "var(--muted-foreground)" } : undefined}
           >
-            {isAnimated
+            {showFrom
               ? formatTransform(slot, slot.from)
               : formatTransform(slot, slot.to)}
           </span>
@@ -365,14 +362,46 @@ export function Metrics() {
     }
 
     // Static metric
+    if (canAnimate) {
+      return (
+        <div
+          key={key}
+          ref={(el) => {
+            if (el) staticCardRefs.current.set(key, el);
+          }}
+          style={{ opacity: 0 }}
+        >
+          <span className="block font-serif text-4xl md:text-5xl tabular-nums text-foreground">
+            {slot.value}
+          </span>
+          <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground mt-2">
+            {slot.label}
+          </span>
+        </div>
+      );
+    }
+
+    if (mobileAnimated) {
+      return (
+        <motion.div
+          key={key}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <span className="block font-serif text-4xl md:text-5xl tabular-nums text-foreground">
+            {slot.value}
+          </span>
+          <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground mt-2">
+            {slot.label}
+          </span>
+        </motion.div>
+      );
+    }
+
     return (
-      <div
-        key={key}
-        ref={(el) => {
-          if (el) staticCardRefs.current.set(key, el);
-        }}
-        style={canAnimate ? { opacity: 0 } : undefined}
-      >
+      <div key={key}>
         <span className="block font-serif text-4xl md:text-5xl tabular-nums text-foreground">
           {slot.value}
         </span>
@@ -412,35 +441,67 @@ export function Metrics() {
 
       {/* 4-category grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
-        {categories.map((cat, ci) => (
-          <div key={cat.name}>
-            {/* Category label */}
-            <span
-              ref={(el) => {
-                if (el) categoryLabelRefs.current.set(ci, el);
-              }}
-              className="block font-mono text-xs uppercase tracking-widest text-primary mb-3"
-              style={canAnimate ? { opacity: 0 } : undefined}
-            >
-              {cat.name}
-            </span>
+        {categories.map((cat, ci) => {
+          const mobileAnimated = !canAnimate && !reducedMotion;
 
-            {/* Divider */}
-            <div
-              ref={(el) => {
-                if (el) categoryDividerRefs.current.set(ci, el);
-              }}
-              className="h-px bg-border mb-6"
-              style={canAnimate ? { opacity: 0 } : undefined}
-            />
+          return (
+            <div key={cat.name}>
+              {/* Category label */}
+              {canAnimate ? (
+                <span
+                  ref={(el) => {
+                    if (el) categoryLabelRefs.current.set(ci, el);
+                  }}
+                  className="block font-mono text-xs uppercase tracking-widest text-primary mb-3"
+                  style={{ opacity: 0 }}
+                >
+                  {cat.name}
+                </span>
+              ) : mobileAnimated ? (
+                <motion.span
+                  className="block font-mono text-xs uppercase tracking-widest text-primary mb-3"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                >
+                  {cat.name}
+                </motion.span>
+              ) : (
+                <span className="block font-mono text-xs uppercase tracking-widest text-primary mb-3">
+                  {cat.name}
+                </span>
+              )}
 
-            {/* 2-col sub-grid for the two metrics */}
-            <div className="grid grid-cols-2 gap-x-8">
-              {renderMetric(cat.slot1, ci, 0)}
-              {renderMetric(cat.slot2, ci, 1)}
+              {/* Divider */}
+              {canAnimate ? (
+                <div
+                  ref={(el) => {
+                    if (el) categoryDividerRefs.current.set(ci, el);
+                  }}
+                  className="h-px bg-border mb-6"
+                  style={{ opacity: 0 }}
+                />
+              ) : mobileAnimated ? (
+                <motion.div
+                  className="h-px bg-border mb-6"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              ) : (
+                <div className="h-px bg-border mb-6" />
+              )}
+
+              {/* 2-col sub-grid for the two metrics */}
+              <div className="grid grid-cols-2 gap-x-8">
+                {renderMetric(cat.slot1, ci, 0)}
+                {renderMetric(cat.slot2, ci, 1)}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );
@@ -450,7 +511,7 @@ export function Metrics() {
       {canAnimate ? (
         <div
           ref={pinContainerRef}
-          className="h-screen overflow-hidden flex flex-col justify-center"
+          className="h-dvh overflow-hidden flex flex-col justify-center"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             {renderContent()}

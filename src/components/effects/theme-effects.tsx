@@ -7,12 +7,31 @@ import { StarParticles } from "./star-particles";
 
 const emptySubscribe = () => () => {};
 
+function subscribeToMobile(cb: () => void) {
+  const mql = window.matchMedia("(max-width: 767px)");
+  mql.addEventListener("change", cb);
+  return () => mql.removeEventListener("change", cb);
+}
+
+function getIsMobileSnapshot() {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
+
+function getIsMobileServerSnapshot() {
+  return false;
+}
+
 export function ThemeEffects() {
   const { resolvedTheme } = useTheme();
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false,
+  );
+  const isMobile = useSyncExternalStore(
+    subscribeToMobile,
+    getIsMobileSnapshot,
+    getIsMobileServerSnapshot,
   );
 
   // Avoid hydration mismatch — render nothing until mounted on client
@@ -24,7 +43,7 @@ export function ThemeEffects() {
     return (
       <>
         <Spotlight fixed />
-        <StarParticles fixed starCount={100} />
+        <StarParticles fixed starCount={isMobile ? 30 : 100} />
       </>
     );
   }

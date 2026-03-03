@@ -112,7 +112,7 @@ export function JourneyCTA({
   return (
     <section
       ref={containerRef}
-      className="journey-cta relative min-h-screen flex items-center justify-center bg-[#f5f2eb]"
+      className="journey-cta relative min-h-dvh flex items-center justify-center bg-[#f5f2eb]"
     >
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(139,125,94,0.15)_1px,transparent_0)] [background-size:24px_24px]" />
