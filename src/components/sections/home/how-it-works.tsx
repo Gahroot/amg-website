@@ -133,7 +133,7 @@ export function HowItWorks() {
     <section
       ref={sectionRef}
       id="how-it-works"
-      className="relative"
+      className="relative z-0"
       style={{ height: canPin ? "300vh" : "auto" }}
     >
       <div

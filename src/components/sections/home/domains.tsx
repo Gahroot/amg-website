@@ -109,10 +109,10 @@ export function Domains() {
   );
 
   return (
-    <section ref={sectionRef} id="domains" className="overflow-hidden">
+    <section ref={sectionRef} id="domains" className="relative z-10">
       {canPin ? (
         /* Desktop: GSAP horizontal scroll — header inside pinned container */
-        <div ref={trackRef} className="h-dvh overflow-hidden flex flex-col">
+        <div ref={trackRef} className="h-dvh overflow-hidden flex flex-col bg-background">
           <div className="pt-24 pb-8 flex-shrink-0">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
