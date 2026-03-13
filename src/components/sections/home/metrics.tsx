@@ -427,7 +427,7 @@ export function Metrics() {
             aria-hidden="true"
             className="absolute inset-0 font-serif text-3xl md:text-4xl tracking-tight"
           >
-            The Fragmented Reality
+            Your Current Fragmented Reality
           </h2>
         )}
         <h2
@@ -435,7 +435,7 @@ export function Metrics() {
           className="font-serif text-3xl md:text-4xl tracking-tight"
           style={canAnimate ? { opacity: 0 } : undefined}
         >
-          Measured Impact
+          Your Future with AMG
         </h2>
       </div>
 
