@@ -24,7 +24,7 @@ const ConstellationGraph = dynamic(
 );
 
 // Build minimal graph data for the 3D layer
-const RING_RADIUS = 60;
+const RING_RADIUS = 100;
 
 function ringPosition(index: number, total: number, radius: number) {
   const angle = (2 * Math.PI * index) / total;

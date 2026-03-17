@@ -28,7 +28,7 @@ interface ConstellationGraphProps {
 
 type GraphNode = NodeObject<NetworkNode>;
 
-const CAMERA_Z = 260;
+const CAMERA_Z = 340;
 
 export function ConstellationGraph({
   nodes,
@@ -72,32 +72,70 @@ export function ConstellationGraph({
     return () => window.removeEventListener("resize", updateDimensions);
   }, [height]);
 
-  // Auto-rotate + force tuning
+  // Force tuning + initial camera
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
 
-    const controls = fg.controls() as {
-      autoRotate?: boolean;
-      autoRotateSpeed?: number;
-    };
-    if (controls) {
-      controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.25;
-    }
-
     const charge = fg.d3Force("charge") as unknown as
       | { strength: (v: number) => void }
       | undefined;
-    if (charge?.strength) charge.strength(-150);
+    if (charge?.strength) charge.strength(-250);
 
     const link = fg.d3Force("link") as unknown as
       | { distance: (v: number) => void }
       | undefined;
-    if (link?.distance) link.distance(70);
+    if (link?.distance) link.distance(110);
 
     fg.cameraPosition({ x: 0, y: 0, z: CAMERA_Z });
   }, [dimensions.width, dimensions.height]);
+
+  // Drive auto-rotate via explicit RAF loop (OrbitControls needs update() each frame)
+  // Pause our update() during user drag to avoid double-update jitter
+  const orbitEnabledRef = useRef(true);
+  const isDraggingRef = useRef(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onDown = () => { isDraggingRef.current = true; };
+    const onUp = () => { isDraggingRef.current = false; };
+
+    container.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
+
+    return () => {
+      container.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg) return;
+
+    let frameId: number;
+
+    function tick() {
+      if (!isDraggingRef.current) {
+        const controls = fg?.controls() as {
+          autoRotate?: boolean;
+          autoRotateSpeed?: number;
+          update?: () => void;
+        } | undefined;
+        if (controls) {
+          controls.autoRotate = orbitEnabledRef.current;
+          controls.autoRotateSpeed = 0.5;
+          controls.update?.();
+        }
+      }
+      frameId = requestAnimationFrame(tick);
+    }
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
   // Expose API to parent
   useEffect(() => {
@@ -141,10 +179,7 @@ export function ConstellationGraph({
         );
       },
       setAutoRotate: (enabled) => {
-        const fg = fgRef.current;
-        if (!fg) return;
-        const controls = fg.controls() as { autoRotate?: boolean };
-        if (controls) controls.autoRotate = enabled;
+        orbitEnabledRef.current = enabled;
       },
     };
 

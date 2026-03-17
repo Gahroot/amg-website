@@ -20,15 +20,17 @@ const MARKER_COUNT = 5;
 const CIRCUMFERENCE = 2 * Math.PI * RING_R;
 const ARC_SEGMENT = CIRCUMFERENCE / MARKER_COUNT;
 
-/** Get (x, y) for a marker at index i (starting from 12 o'clock, clockwise). */
-function markerPosition(i: number) {
+/** Get (x, y) for a point at index i on a given radius (12 o'clock, clockwise). */
+function ringPoint(i: number, radius: number) {
   const angle = (i * 360) / MARKER_COUNT - 90; // -90 so index 0 is top
   const rad = (angle * Math.PI) / 180;
   return {
-    x: CX + RING_R * Math.cos(rad),
-    y: CY + RING_R * Math.sin(rad),
+    x: CX + radius * Math.cos(rad),
+    y: CY + radius * Math.sin(rad),
   };
 }
+
+const ICON_OFFSET = 22; // px outside the ring
 
 /** Rotation (degrees) so the progress arc starts at a given marker index. */
 function arcRotation(i: number) {
@@ -48,7 +50,9 @@ export function DomainsDial() {
   const contentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<SVGCircleElement>(null);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() =>
+    Math.floor(Math.random() * MARKER_COUNT)
+  );
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [entranceComplete, setEntranceComplete] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -120,7 +124,7 @@ export function DomainsDial() {
 
       const logo = logoRef.current;
       const ring = ringRef.current;
-      const markers = markerGroupRef.current?.querySelectorAll<SVGCircleElement>("[data-marker]");
+      const markers = markerGroupRef.current?.querySelectorAll<SVGGElement>("[data-marker]");
       const content = contentRef.current;
 
       if (!ring || !markers || !content) return;
@@ -198,20 +202,6 @@ export function DomainsDial() {
     { scope: sectionRef, dependencies: [reducedMotion] }
   );
 
-  /* ---- Number labels ---- */
-  const numberLabels = domains.map((_, i) => {
-    const pos = markerPosition(i);
-    const angle = (i * 360) / MARKER_COUNT - 90;
-    const rad = (angle * Math.PI) / 180;
-    // Push label slightly outward from the marker
-    const offset = 20;
-    return {
-      x: pos.x + offset * Math.cos(rad),
-      y: pos.y + offset * Math.sin(rad),
-      label: String(i + 1).padStart(2, "0"),
-    };
-  });
-
   return (
     <section ref={sectionRef} className="relative py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -230,7 +220,7 @@ export function DomainsDial() {
           {/* Left: Dial SVG */}
           <div ref={svgContainerRef} className="relative flex items-center justify-center">
             <svg
-              viewBox="0 0 440 440"
+              viewBox="-10 -10 460 460"
               className="w-full max-w-[400px] aspect-square"
               aria-hidden="true"
             >
@@ -267,7 +257,7 @@ export function DomainsDial() {
 
               {/* Active spoke */}
               {(() => {
-                const pos = markerPosition(activeIndex);
+                const pos = ringPoint(activeIndex, RING_R);
                 const dx = CX - pos.x;
                 const dy = CY - pos.y;
                 const len = Math.sqrt(dx * dx + dy * dy);
@@ -287,54 +277,58 @@ export function DomainsDial() {
                 );
               })()}
 
-              {/* Marker dots */}
+              {/* Icon markers */}
               <g
                 ref={markerGroupRef}
                 role="tablist"
                 aria-label="Domain selector"
               >
                 {domains.map((domain, i) => {
-                  const pos = markerPosition(i);
+                  const pos = ringPoint(i, RING_R + ICON_OFFSET);
                   const isActive = activeIndex === i;
+                  const size = isActive ? 36 : 28;
                   return (
-                    <circle
-                      key={domain.title}
-                      data-marker
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={isActive ? 8 : 4}
-                      fill={isActive ? "var(--primary, #8b7d5e)" : "transparent"}
-                      stroke="var(--primary, #8b7d5e)"
-                      strokeWidth={isActive ? 0 : 1}
-                      className="cursor-pointer transition-all duration-300"
-                      role="tab"
-                      aria-selected={isActive}
-                      aria-label={domain.title}
-                      tabIndex={isActive ? 0 : -1}
-                      onClick={() => handleMarkerClick(i)}
-                      onKeyDown={handleKeyDown}
-                    />
+                    <g key={domain.title} data-marker>
+                      {/* Hit area circle (invisible but clickable) */}
+                      <circle
+                        cx={pos.x}
+                        cy={pos.y}
+                        r={20}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        role="tab"
+                        aria-selected={isActive}
+                        aria-label={domain.title}
+                        tabIndex={isActive ? 0 : -1}
+                        onClick={() => handleMarkerClick(i)}
+                        onKeyDown={handleKeyDown}
+                      />
+                      {/* Icon via foreignObject */}
+                      <foreignObject
+                        x={pos.x - size / 2}
+                        y={pos.y - size / 2}
+                        width={size}
+                        height={size}
+                        className="pointer-events-none"
+                      >
+                        <div
+                          className={`flex items-center justify-center w-full h-full rounded-full transition-all duration-300 ${
+                            isActive
+                              ? "bg-primary/15 text-primary"
+                              : "text-primary/40"
+                          }`}
+                        >
+                          <domain.icon
+                            className={`transition-all duration-300 ${
+                              isActive ? "size-4.5" : "size-3.5"
+                            }`}
+                          />
+                        </div>
+                      </foreignObject>
+                    </g>
                   );
                 })}
               </g>
-
-              {/* Number labels */}
-              {numberLabels.map((nl, i) => (
-                <text
-                  key={nl.label}
-                  x={nl.x}
-                  y={nl.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize={10}
-                  fontFamily="var(--font-mono, monospace)"
-                  fill="var(--muted-foreground, #737373)"
-                  opacity={activeIndex === i ? 1 : 0.5}
-                  className="pointer-events-none select-none transition-opacity duration-300"
-                >
-                  {nl.label}
-                </text>
-              ))}
             </svg>
 
             {/* Shield logo overlay (HTML, not foreignObject) */}
@@ -363,18 +357,13 @@ export function DomainsDial() {
                 role="tabpanel"
                 aria-labelledby={`dial-tab-${activeIndex}`}
               >
-                {/* Domain number watermark */}
-                <span className="font-mono text-6xl lg:text-7xl font-bold text-primary/20 leading-none block mb-4">
-                  {String(activeIndex + 1).padStart(2, "0")}
-                </span>
+                {/* Icon watermark */}
+                <activeDomain.icon className="size-12 lg:size-14 text-primary/20 mb-4" strokeWidth={1.5} />
 
-                {/* Icon + title */}
-                <div className="flex items-center gap-3 mb-4">
-                  <activeDomain.icon className="size-5 text-primary shrink-0" />
-                  <h3 className="font-serif text-2xl lg:text-3xl tracking-tight">
-                    {activeDomain.title}
-                  </h3>
-                </div>
+                {/* Title */}
+                <h3 className="font-serif text-2xl lg:text-3xl tracking-tight mb-4">
+                  {activeDomain.title}
+                </h3>
 
                 {/* Description */}
                 <p className="text-muted-foreground leading-relaxed mb-6">
