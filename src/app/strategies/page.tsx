@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer";
 import { ScrollProgress } from "@/components/layout/scroll-progress";
 import { StrategiesHero } from "@/components/sections/strategies/strategies-hero";
 import { StrategiesDomains } from "@/components/sections/strategies/strategies-domains";
+import { EngagementModel } from "@/components/sections/home/engagement-model";
 
 export const metadata: Metadata = {
   title: "Strategies",
@@ -19,6 +20,7 @@ export default function StrategiesPage() {
       <main id="main-content">
         <StrategiesHero />
         <StrategiesDomains />
+        <EngagementModel />
       </main>
       <Footer />
     </>

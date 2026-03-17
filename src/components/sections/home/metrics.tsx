@@ -162,11 +162,10 @@ export function Metrics() {
       if (!section) return;
 
       if (canAnimate) {
-        /* ── Desktop: full scroll-pinned animation ── */
-        const pinContainer = pinContainerRef.current;
+        /* ── Desktop: auto-playing animation (no scroll pin) ── */
         const beforeTitle = beforeTitleRef.current;
         const afterTitle = afterTitleRef.current;
-        if (!pinContainer || !beforeTitle || !afterTitle) return;
+        if (!beforeTitle || !afterTitle) return;
 
         const styles = getComputedStyle(section);
         const mutedColor = styles.getPropertyValue("--muted-foreground").trim();
@@ -214,24 +213,22 @@ export function Metrics() {
         gsap.set(categoryLabels, { autoAlpha: 0 });
         gsap.set(categoryDividers, { autoAlpha: 0 });
 
+        // Scroll-triggered timeline (no pin — plays when section enters view)
         const tl = gsap.timeline({
           scrollTrigger: {
-            trigger: pinContainer,
-            start: "top top",
-            end: "+=200%",
-            scrub: 0.6,
-            pin: true,
-            invalidateOnRefresh: true,
+            trigger: section,
+            start: "top 75%",
+            once: true,
           },
         });
 
-        const proxies = transformCards.map(({ numEl, entry }) => {
+        transformCards.forEach(({ numEl, entry }) => {
           const proxy = { val: entry.metric.from };
           tl.to(
             proxy,
             {
               val: entry.metric.to,
-              duration: 55,
+              duration: 2,
               ease: "power2.inOut",
               onUpdate() {
                 numEl.textContent = formatTransform(entry.metric, proxy.val);
@@ -239,13 +236,12 @@ export function Metrics() {
             },
             0,
           );
-          return proxy;
         });
 
         transformCards.forEach(({ el }) => {
           tl.to(
             el,
-            { x: 0, y: 0, rotate: 0, duration: 55, ease: "power2.inOut" },
+            { x: 0, y: 0, rotate: 0, duration: 2, ease: "power2.inOut" },
             0,
           );
         });
@@ -253,70 +249,52 @@ export function Metrics() {
         transformCards.forEach(({ numEl }) => {
           tl.to(
             numEl,
-            { color: fgColor, duration: 55, ease: "power2.inOut" },
+            { color: fgColor, duration: 2, ease: "power2.inOut" },
             0,
           );
         });
 
-        tl.to(beforeTitle, { autoAlpha: 0, duration: 15, ease: "power2.inOut" }, 20);
-        tl.to(afterTitle, { autoAlpha: 1, duration: 15, ease: "power2.inOut" }, 25);
+        tl.to(beforeTitle, { autoAlpha: 0, duration: 0.5, ease: "power2.inOut" }, 0.8);
+        tl.to(afterTitle, { autoAlpha: 1, duration: 0.5, ease: "power2.inOut" }, 1.0);
 
-        tl.to(categoryLabels, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
-        tl.to(categoryDividers, { autoAlpha: 1, duration: 20, ease: "power2.out" }, 35);
+        tl.to(categoryLabels, { autoAlpha: 1, duration: 0.6, ease: "power2.out" }, 1.4);
+        tl.to(categoryDividers, { autoAlpha: 1, duration: 0.6, ease: "power2.out" }, 1.4);
 
         tl.to(
           staticCards,
           {
             autoAlpha: 1,
             y: 0,
-            duration: 25,
+            duration: 0.8,
             ease: "power2.out",
-            stagger: 0.08 * 25,
+            stagger: 0.1,
           },
-          55,
+          2.0,
         );
 
         return () => {
-          void proxies;
-          tl.scrollTrigger?.kill();
           tl.kill();
         };
       }
 
-      /* ── Mobile: GSAP scroll-scrubbed number morphing (no pin) ── */
+      /* ── Mobile: GSAP number morphing (auto-play, no scroll) ── */
       if (reducedMotion) return;
-
-      const triggers: gsap.core.Tween[] = [];
 
       for (const entry of transformEntries) {
         const key = `${entry.catIndex}-${entry.slotIndex}`;
-        const cardEl = transformCardRefs.current.get(key);
         const numEl = transformNumberRefs.current.get(key);
-        if (!cardEl || !numEl) continue;
+        if (!numEl) continue;
 
         const proxy = { val: entry.metric.from };
-        const tween = gsap.to(proxy, {
+        gsap.to(proxy, {
           val: entry.metric.to,
+          duration: 1.5,
           ease: "power2.inOut",
-          scrollTrigger: {
-            trigger: cardEl,
-            start: "top 85%",
-            end: "top 40%",
-            scrub: true,
-          },
           onUpdate() {
             numEl.textContent = formatTransform(entry.metric, proxy.val);
           },
         });
-        triggers.push(tween);
       }
-
-      return () => {
-        triggers.forEach((t) => {
-          t.scrollTrigger?.kill();
-          t.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [canAnimate, reducedMotion] },
   );
@@ -386,8 +364,7 @@ export function Metrics() {
         <motion.div
           key={key}
           initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <span className="block font-serif text-4xl md:text-5xl tabular-nums text-foreground">
@@ -461,8 +438,7 @@ export function Metrics() {
                 <motion.span
                   className="block font-mono text-xs uppercase tracking-widest text-primary mb-3"
                   initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, margin: "-60px" }}
+                  animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 >
                   {cat.name}
@@ -486,8 +462,7 @@ export function Metrics() {
                 <motion.div
                   className="h-px bg-border mb-6"
                   initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, margin: "-60px" }}
+                  animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 />
               ) : (
@@ -507,18 +482,18 @@ export function Metrics() {
   );
 
   return (
-    <section ref={sectionRef} id="metrics">
+    <section ref={sectionRef} id="metrics" className="-mt-16 lg:-mt-24">
       {canAnimate ? (
         <div
           ref={pinContainerRef}
-          className="h-dvh overflow-hidden flex flex-col justify-center"
+          className="pb-24 lg:pb-32"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             {renderContent()}
           </div>
         </div>
       ) : (
-        <div className="py-24 lg:py-32">
+        <div className="pb-24 lg:pb-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             {renderContent()}
           </div>

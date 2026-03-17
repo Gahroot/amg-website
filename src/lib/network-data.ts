@@ -6,6 +6,7 @@ export interface NetworkNode {
   color: string;
   description?: string;
   href?: string;
+  iconSvg?: string;
   fx?: number;
   fy?: number;
   fz?: number;

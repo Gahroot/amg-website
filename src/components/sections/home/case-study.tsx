@@ -57,30 +57,20 @@ export function CaseStudy() {
       const entries = entryRefs.current.filter(Boolean) as HTMLDivElement[];
 
       if (canPin) {
-        /* ── Desktop: pinned scroll animation ── */
-        const pinContainer = pinContainerRef.current;
-        if (!pinContainer || !progress || !costEl) return;
+        /* ── Desktop: auto-playing timeline animation ── */
+        if (!progress || !costEl) return;
 
         gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
         gsap.set(dots, { scale: 0, autoAlpha: 0 });
         gsap.set(entries, { autoAlpha: 0, y: 20 });
 
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: pinContainer,
-            start: "top top",
-            end: "+=100%",
-            scrub: 1,
-            pin: true,
-            invalidateOnRefresh: true,
-          },
-        });
+        const tl = gsap.timeline({ delay: 0.3 });
 
-        tl.to(progress, { scaleX: 1, duration: 4, ease: "none" });
+        tl.to(progress, { scaleX: 1, duration: 2, ease: "none" });
 
         entries.forEach((entry, i) => {
           const dot = dots[i];
-          const offset = i * 1;
+          const offset = i * 0.5;
           if (dot) {
             tl.to(
               dot,
@@ -100,7 +90,7 @@ export function CaseStudy() {
           proxy,
           {
             val: 4.2,
-            duration: 4,
+            duration: 2,
             ease: "power2.in",
             onUpdate() {
               costEl.textContent = `$${proxy.val.toFixed(1)}M`;
@@ -110,92 +100,56 @@ export function CaseStudy() {
         );
 
         return () => {
-          tl.scrollTrigger?.kill();
           tl.kill();
         };
       }
 
-      /* ── Mobile: scroll-triggered animations (no pin) ── */
+      /* ── Mobile: auto-playing animations (no scroll) ── */
       if (reducedMotion) return;
       if (!progress || !costEl) return;
 
-      const tweens: gsap.core.Tween[] = [];
-
-      // Progress line scrubbed to section
+      // Progress line
       gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
-      tweens.push(
-        gsap.to(progress, {
-          scaleX: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 80%",
-            end: "bottom 60%",
-            scrub: true,
-          },
-        }),
-      );
+      gsap.to(progress, {
+        scaleX: 1,
+        duration: 2,
+        ease: "none",
+      });
 
-      // Dots pop on viewport entry
-      dots.forEach((dot) => {
+      // Dots pop
+      dots.forEach((dot, i) => {
         gsap.set(dot, { scale: 0, autoAlpha: 0 });
-        tweens.push(
-          gsap.to(dot, {
-            scale: 1,
-            autoAlpha: 1,
-            duration: 0.3,
-            ease: "back.out(2)",
-            scrollTrigger: {
-              trigger: dot,
-              start: "top 85%",
-              toggleActions: "play none none none",
-            },
-          }),
-        );
+        gsap.to(dot, {
+          scale: 1,
+          autoAlpha: 1,
+          duration: 0.3,
+          ease: "back.out(2)",
+          delay: i * 0.3,
+        });
       });
 
       // Timeline entries fade up
-      entries.forEach((entry) => {
+      entries.forEach((entry, i) => {
         gsap.set(entry, { autoAlpha: 0, y: 20 });
-        tweens.push(
-          gsap.to(entry, {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.5,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: entry,
-              start: "top 85%",
-              toggleActions: "play none none none",
-            },
-          }),
-        );
+        gsap.to(entry, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "power2.out",
+          delay: i * 0.3 + 0.15,
+        });
       });
 
-      // Cost counter scrubbed to scroll
+      // Cost counter
       const proxy = { val: 0 };
-      tweens.push(
-        gsap.to(proxy, {
-          val: 4.2,
-          ease: "power2.in",
-          scrollTrigger: {
-            trigger: costEl,
-            start: "top 90%",
-            end: "top 40%",
-            scrub: true,
-          },
-          onUpdate() {
-            costEl.textContent = `$${proxy.val.toFixed(1)}M`;
-          },
-        }),
-      );
-
-      return () => {
-        tweens.forEach((t) => {
-          t.scrollTrigger?.kill();
-          t.kill();
-        });
-      };
+      gsap.to(proxy, {
+        val: 4.2,
+        duration: 2,
+        ease: "power2.in",
+        onUpdate() {
+          costEl.textContent = `$${proxy.val.toFixed(1)}M`;
+        },
+      });
     },
     { scope: sectionRef, dependencies: [canPin, reducedMotion] },
   );
@@ -289,10 +243,10 @@ export function CaseStudy() {
   return (
     <section ref={sectionRef} className="bg-[#1a1714] text-[#e8e4dc]">
       {canPin ? (
-        /* Desktop: pinned scroll container */
+        /* Desktop: full-height container (no pin) */
         <div
           ref={pinContainerRef}
-          className="h-dvh overflow-hidden flex flex-col justify-center"
+          className="min-h-dvh flex flex-col justify-center"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {renderTimeline()}

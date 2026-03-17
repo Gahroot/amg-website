@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const leftItems = [
   {
@@ -62,11 +62,6 @@ export function Differentiators() {
             duration: 0.7,
             stagger: 0.15,
             ease: "power2.out",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 70%",
-              once: true,
-            },
           }
         );
       }
@@ -81,20 +76,9 @@ export function Differentiators() {
             duration: 0.7,
             stagger: 0.15,
             ease: "power2.out",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 70%",
-              once: true,
-            },
           }
         );
       }
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [] }
   );

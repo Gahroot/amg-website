@@ -1,38 +1,35 @@
 "use client";
 
 import { useRef, useCallback } from "react";
+import Image from "next/image";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 import { useReducedMotion } from "@/lib/use-can-pin";
 
 const challenges = [
   {
-    number: "01",
-    title: "Cross-Border Vulnerabilities",
-    description:
-      "Global operations spanning multiple jurisdictions create overlapping exposures that no single advisor can see.",
-  },
-  {
-    number: "02",
     title: "Coordinated Threats",
     description:
       "Public visibility and digital footprints attract sophisticated, multi-vector attacks targeting family and enterprise.",
   },
   {
-    number: "03",
-    title: "Fragmented Intelligence",
+    title: "Exponential Vulnerabilities",
     description:
-      "Critical data siloed across legal, financial, and security teams leaves dangerous gaps in your defense posture.",
+      "Global operations and business expansion create overlapping exposures that no single advisor can see.",
   },
   {
-    number: "04",
-    title: "Outpaced Response",
+    title: "Fragmented Intelligence",
     description:
-      "Threat velocity now exceeds the speed at which traditional advisory teams communicate and coordinate.",
+      "Critical data siloed across legal, financial, and security teams leaves dangerous gaps in your security posture.",
+  },
+  {
+    title: "Outpace Response",
+    description:
+      "Modern threats outpace the reactive capabilities of traditional advisory teams.",
   },
 ];
 
 const CALLOUT_TEXT =
-  "AMG brings order to chaos. One integrated platform across every domain of risk.";
+  "AMG brings order to chaos. One integrated platform for clarity and peace of mind.";
 
 export function Problem() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -64,31 +61,33 @@ export function Problem() {
       gsap.set(items, { autoAlpha: 0, y: 40 });
       gsap.set(callout, { autoAlpha: 0, y: 40 });
 
-      gsap.to(items, {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 75%",
+          once: true,
+        },
+      });
+
+      tl.to(items, {
         autoAlpha: 1,
         y: 0,
         duration: 0.5,
         ease: "power2.out",
         stagger: 0.12,
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          once: true,
-        },
       });
 
-      gsap.to(callout, {
+      tl.to(callout, {
         autoAlpha: 1,
         y: 0,
         duration: 0.6,
         ease: "power2.out",
-        delay: items.length * 0.12 + 0.1,
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          once: true,
-        },
-      });
+      }, "-=0.1");
+
+      return () => {
+        tl.scrollTrigger?.kill();
+        tl.kill();
+      };
     },
     { scope: sectionRef, dependencies: [reducedMotion] }
   );
@@ -102,23 +101,31 @@ export function Problem() {
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl tracking-tight mb-6">
           Navigating Complex Realities
         </h2>
-        <p className="text-muted-foreground text-lg max-w-2xl mb-16">
-          The threats facing ultra-high-net-worth families are no longer
-          isolated. They are converging, accelerating, and increasingly
-          sophisticated.
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center mb-16">
+          <p className="text-muted-foreground text-lg">
+            The threats facing ultra-high-net-worth families are no longer
+            isolated. They are converging, accelerating, and increasingly
+            sophisticated.
+          </p>
+          <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+            <Image
+              src="/images/globe-dominoes.jpg"
+              alt="Glass globe surrounded by falling dominoes — cascading global risk"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
           {challenges.map((challenge, i) => (
             <div
-              key={challenge.number}
+              key={challenge.title}
               ref={setChallengeRef(i)}
               className="border-t border-[rgba(26,23,20,0.15)] pt-6"
             >
-              <span className="font-serif italic text-2xl text-primary leading-none">
-                {challenge.number}
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl tracking-tight mt-3 mb-2">
+              <h3 className="font-serif text-xl sm:text-2xl tracking-tight mb-2">
                 {challenge.title}
               </h3>
               <p className="text-muted-foreground text-base leading-relaxed">

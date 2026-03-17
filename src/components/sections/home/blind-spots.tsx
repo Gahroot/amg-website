@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { gsap, ScrollTrigger, SplitText, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, SplitText, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function BlindSpots() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -21,7 +21,7 @@ export function BlindSpots() {
       if (prefersReducedMotion) return;
       if (!bodyRef.current || !imageRef.current) return;
 
-      // SplitText word-by-word scrub reveal on body paragraph
+      // SplitText word-by-word reveal — auto-play over 1.5s instead of scrub
       const split = SplitText.create(bodyRef.current, {
         type: "words",
       });
@@ -31,36 +31,23 @@ export function BlindSpots() {
       gsap.to(split.words, {
         opacity: 1,
         stagger: 0.05,
-        ease: "none",
-        scrollTrigger: {
-          trigger: bodyRef.current,
-          start: "top 80%",
-          end: "bottom 40%",
-          scrub: true,
-        },
+        duration: 1.5,
+        ease: "power2.inOut",
       });
 
-      // Image parallax via ScrollTrigger
+      // Image parallax — auto-play over 1.5s instead of scrub
       gsap.fromTo(
         imageRef.current,
         { y: 50 },
         {
           y: 0,
-          ease: "none",
-          scrollTrigger: {
-            trigger: imageRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
+          duration: 1.5,
+          ease: "power2.out",
         }
       );
 
       return () => {
         split.revert();
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
       };
     },
     { scope: sectionRef }
@@ -70,12 +57,12 @@ export function BlindSpots() {
     <section ref={sectionRef} className="py-24 lg:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left column: fog image */}
-          <div className="overflow-hidden rounded-sm">
-            <div ref={imageRef} className="relative aspect-[3/4] rounded-sm overflow-hidden">
+          {/* Left column: portrait image */}
+          <div className="overflow-hidden rounded-xl">
+            <div ref={imageRef} className="relative aspect-[3/4] rounded-xl overflow-hidden">
               <Image
-                src="/images/fog.png"
-                alt="Light emerging through fog — revealing what was hidden in blind spots"
+                src="/images/blind-spot-portrait.jpg"
+                alt="Portrait of an elderly man with eyes closed — representing the blind spots in traditional advisory"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"

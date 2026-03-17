@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const capabilities = [
   {
@@ -51,19 +51,8 @@ export function WhatWeDo() {
           duration: 0.6,
           stagger: 0.1,
           ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 85%",
-            once: true,
-          },
         }
       );
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [] }
   );

@@ -47,7 +47,7 @@ describe("navLinks", () => {
   });
 
   it("contains all expected labels", () => {
-    const expectedLabels = ["Home", "About", "Solutions", "How We Serve", "Get in Touch"];
+    const expectedLabels = ["Home", "About", "Who We Serve", "Solutions", "Get in Touch"];
     const actualLabels = navLinks.map((link) => link.label);
 
     for (const label of expectedLabels) {

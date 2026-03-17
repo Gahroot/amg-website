@@ -75,7 +75,7 @@ export function EngagementModel() {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: "top 80%",
+          start: "top 75%",
           once: true,
         },
       });
@@ -87,6 +87,11 @@ export function EngagementModel() {
         { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 },
         0.4
       );
+
+      return () => {
+        tl.scrollTrigger?.kill();
+        tl.kill();
+      };
     },
     { scope: sectionRef, dependencies: [reducedMotion] }
   );

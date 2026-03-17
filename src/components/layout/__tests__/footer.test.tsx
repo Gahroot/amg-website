@@ -41,7 +41,7 @@ describe("Footer", () => {
     const expectedLinks = [
       "About",
       "Solutions",
-      "How We Serve",
+      "Who We Serve",
       "Get in Touch",
     ];
     for (const label of expectedLinks) {

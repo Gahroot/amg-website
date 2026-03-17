@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import Image from "next/image";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function AboutHero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -30,26 +31,28 @@ export function AboutHero() {
           duration: 0.6,
           stagger: 0.12,
           ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 85%",
-            once: true,
-          },
         }
       );
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [] }
   );
 
   return (
-    <section ref={sectionRef} className="py-24 lg:py-32 pt-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="relative py-24 lg:py-32 pt-32">
+      {/* Hero background image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/aerial-forest-lake.jpg"
+          alt="Aerial view of a pristine forest lake — strategic clarity from above"
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-background/85" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p
           ref={(el) => {
             itemRefs.current[0] = el;

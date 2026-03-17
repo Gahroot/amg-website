@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const steps = [
   {
@@ -73,19 +73,8 @@ export function JourneyDetail() {
           duration: 0.6,
           stagger: 0.1,
           ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 75%",
-            once: true,
-          },
         }
       );
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [] }
   );

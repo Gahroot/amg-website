@@ -31,20 +31,12 @@ const Domains = dynamic(
   () => import("./domains").then((m) => m.Domains),
   { ssr: false, loading }
 );
-const HowItWorks = dynamic(
-  () => import("./how-it-works").then((m) => m.HowItWorks),
-  { ssr: false, loading }
-);
 const Metrics = dynamic(
   () => import("./metrics").then((m) => m.Metrics),
   { ssr: false, loading }
 );
 const CaseStudy = dynamic(
   () => import("./case-study").then((m) => m.CaseStudy),
-  { ssr: false, loading }
-);
-const EngagementModel = dynamic(
-  () => import("./engagement-model").then((m) => m.EngagementModel),
   { ssr: false, loading }
 );
 const CTA = dynamic(
@@ -100,11 +92,9 @@ export function HomeClient() {
         <Problem />
         <BlindSpots />
         <Solution />
-        <Domains />
-        <HowItWorks />
         <Metrics />
+        <Domains />
         <CaseStudy />
-        <EngagementModel />
         <CTA />
       </main>
       <Footer />

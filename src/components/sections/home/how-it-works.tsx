@@ -54,7 +54,7 @@ export function HowItWorks() {
   );
 
   /* ---------------------------------------------------------------- */
-  /*  GSAP stagger animation on section entry                          */
+  /*  GSAP stagger animation on mount                                  */
   /* ---------------------------------------------------------------- */
 
   useGSAP(
@@ -71,18 +71,26 @@ export function HowItWorks() {
 
       gsap.set(items, { autoAlpha: 0, y: 24 });
 
-      gsap.to(items, {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 75%",
+          once: true,
+        },
+      });
+
+      tl.to(items, {
         autoAlpha: 1,
         y: 0,
         duration: 0.5,
         ease: "power2.out",
-        stagger: 0.12,
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          once: true,
-        },
+        stagger: 0.15,
       });
+
+      return () => {
+        tl.scrollTrigger?.kill();
+        tl.kill();
+      };
     },
     { scope: sectionRef, dependencies: [reducedMotion] }
   );
@@ -108,7 +116,7 @@ export function HowItWorks() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {/* Compass image — always visible, no entrance animation */}
           <div className="relative">
-            <div className="relative aspect-[3/4] rounded-sm overflow-hidden">
+            <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
               <Image
                 src="/images/compass.jpg"
                 alt="Antique compass pointing north — symbol of decisive direction through complexity"

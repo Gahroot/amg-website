@@ -17,6 +17,7 @@ export function Hero() {
     if (window.matchMedia("(max-width: 767px)").matches) {
       video.src = "/videos/hero-coastline-720p.mp4";
     }
+    video.playbackRate = 0.5;
   }, []);
 
   useGSAP(
@@ -115,7 +116,7 @@ export function Hero() {
 
       {/* Text Content - centered mobile, right-aligned desktop */}
       <div className="relative z-20 w-full px-4 sm:px-6 lg:px-8 lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:pr-8 lg:pl-16 lg:w-1/2">
-        <h1 className="hero-wordmark font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] tracking-tight leading-[0.9] text-white mb-6">
+        <h1 className="hero-wordmark font-serif text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[11rem] tracking-tight leading-[0.9] text-white mb-6">
           Anchor
           <br />
           Mill Group

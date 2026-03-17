@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import Image from "next/image";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const caseStudies = [
   {
     title: "Stabilizing a Family Office",
     client: "$680M AUM family office",
+    image: "/images/stacked-stones.jpg",
     metrics: [
       "Security score improved from 34 to 87",
       "Incident response: 72 hours \u2192 4 hours",
@@ -66,19 +68,8 @@ export function CaseStudies() {
           duration: 0.6,
           stagger: 0.15,
           ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 75%",
-            once: true,
-          },
         }
       );
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [] }
   );
@@ -111,6 +102,17 @@ export function CaseStudies() {
                   <p className="font-mono text-xs uppercase tracking-widest text-primary mb-6">
                     {study.client}
                   </p>
+                  {study.image && (
+                    <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-6">
+                      <Image
+                        src={study.image}
+                        alt={study.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 33vw"
+                      />
+                    </div>
+                  )}
                   <ul className="space-y-3">
                     {study.metrics.map((metric) => (
                       <li key={metric} className="flex items-start gap-3">

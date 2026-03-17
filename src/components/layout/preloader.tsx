@@ -112,7 +112,7 @@ export function Preloader({ onComplete }: PreloaderProps) {
         <img
           src="/Anchor-mill-group-logo.webp"
           alt="Anchor Mill Group"
-          className="preloader-logo w-[120px] md:w-[180px] opacity-0 drop-shadow-lg"
+          className="preloader-logo w-[120px] md:w-[180px] opacity-0 brightness-0"
         />
 
         {/* Brand name in elegant typography */}

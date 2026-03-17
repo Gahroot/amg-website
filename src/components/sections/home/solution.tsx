@@ -1,91 +1,37 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
+import Image from "next/image";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
-
-const traditionalItems = [
-  "Wealth Advisor (siloed)",
-  "Estate Attorney (siloed)",
-  "Security Consultant (siloed)",
-  "Insurance Broker (siloed)",
-  "IT / Cyber Team (siloed)",
-];
-
-const amgItems = [
-  "Unified Threat Picture",
-  "Cross-Domain Coordination",
-  "Single Point of Command",
-  "Real-Time Intelligence",
-  "Proactive Risk Mitigation",
-];
-
-function subscribeToMotionPref(callback: () => void) {
-  const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
-}
-
-function getMotionPref() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function getMotionPrefServer() {
-  return false;
-}
 
 export function Solution() {
   const sectionRef = useRef<HTMLElement>(null);
-  const leftItemsRef = useRef<(HTMLLIElement | null)[]>([]);
-  const rightItemsRef = useRef<(HTMLLIElement | null)[]>([]);
-
-  const reducedMotion = useSyncExternalStore(
-    subscribeToMotionPref,
-    getMotionPref,
-    getMotionPrefServer
-  );
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      if (reducedMotion || !sectionRef.current) return;
+      if (!sectionRef.current || !contentRef.current) return;
+
+      const prefersReduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (prefersReduced) return;
 
       initGSAP();
 
-      const section = sectionRef.current;
-      const leftEls = leftItemsRef.current.filter(Boolean) as HTMLLIElement[];
-      const rightEls = rightItemsRef.current.filter(Boolean) as HTMLLIElement[];
-
-      gsap.set(leftEls, { x: -30, autoAlpha: 0 });
-      gsap.set(rightEls, { x: 30, autoAlpha: 0 });
-
-      // Left column: slide in from left, staggered
-      gsap.to(leftEls, {
-        x: 0,
-        autoAlpha: 1,
-        duration: 0.5,
+      gsap.from(contentRef.current, {
+        y: 20,
+        autoAlpha: 0,
+        duration: 0.6,
         ease: "power2.out",
-        stagger: 0.08,
         scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          once: true,
-        },
-      });
-
-      // Right column: slide in from right, staggered
-      gsap.to(rightEls, {
-        x: 0,
-        autoAlpha: 1,
-        duration: 0.5,
-        ease: "power2.out",
-        stagger: 0.08,
-        scrollTrigger: {
-          trigger: section,
+          trigger: contentRef.current,
           start: "top 80%",
           once: true,
         },
       });
     },
-    { scope: sectionRef, dependencies: [reducedMotion] }
+    { scope: sectionRef }
   );
 
   return (
@@ -99,69 +45,39 @@ export function Solution() {
         </div>
       </div>
 
-      {/* Section header */}
+      {/* Section header + prose */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12 lg:mb-16">
           <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
             THE SOLUTION
           </p>
           <h2 className="font-serif text-3xl md:text-4xl tracking-tight">
-            Your Fragmented Reality
+            Take Control of Your Fragmented Reality
           </h2>
         </div>
 
-        {/* Two-column comparison */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
-          {/* Traditional (left) */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
-              <h3 className="font-mono text-xs uppercase tracking-widest text-destructive font-semibold">
-                TRADITIONAL
-              </h3>
-            </div>
-            <ul>
-              {traditionalItems.map((item, i) => (
-                <li
-                  key={item}
-                  ref={(el) => {
-                    leftItemsRef.current[i] = el;
-                  }}
-                  className="flex items-center gap-3 py-4 border-b border-[rgba(26,23,20,0.15)]"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-destructive/60 shrink-0" />
-                  <span className="font-mono text-sm text-muted-foreground">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* AMG Integrated (right) */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-              <h3 className="font-mono text-xs uppercase tracking-widest text-primary font-semibold">
-                AMG INTEGRATED
-              </h3>
-            </div>
-            <ul>
-              {amgItems.map((item, i) => (
-                <li
-                  key={item}
-                  ref={(el) => {
-                    rightItemsRef.current[i] = el;
-                  }}
-                  className="flex items-center gap-3 py-4 border-b border-[rgba(26,23,20,0.15)]"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                  <span className="font-mono text-sm text-foreground">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <div ref={contentRef} className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            AMG provides a next-generation integrated platform that delivers a{" "}
+            <strong className="text-foreground font-semibold">Unified Threat Picture</strong> through
+            comprehensive{" "}
+            <strong className="text-foreground font-semibold">Cross-Domain Coordination</strong>. By
+            establishing a{" "}
+            <strong className="text-foreground font-semibold">Single Point of Command</strong>, we
+            empower organizations to harness{" "}
+            <strong className="text-foreground font-semibold">Real-Time Intelligence</strong> for{" "}
+            <strong className="text-foreground font-semibold">Proactive Risk Mitigation</strong>,
+            transforming security operations from reactive postures to actionable,
+            preemptive defense.
+          </p>
+          <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+            <Image
+              src="/images/macro-eye.jpg"
+              alt="Macro close-up of a human eye — seeing the unified threat picture"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
           </div>
         </div>
       </div>

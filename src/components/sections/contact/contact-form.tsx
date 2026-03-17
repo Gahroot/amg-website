@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { gsap, ScrollTrigger, useGSAP, initGSAP } from "@/lib/gsap";
+import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 import { siteConfig } from "@/lib/site-config";
 import {
   submitContactForm,
@@ -92,11 +92,6 @@ function ContactFormInner({ onReset }: { onReset: () => void }) {
             opacity: 1,
             duration: 0.7,
             ease: "power2.out",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 85%",
-              once: true,
-            },
           },
         );
       }
@@ -110,20 +105,9 @@ function ContactFormInner({ onReset }: { onReset: () => void }) {
             opacity: 1,
             duration: 0.7,
             ease: "power2.out",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 85%",
-              once: true,
-            },
           },
         );
       }
-
-      return () => {
-        ScrollTrigger.getAll().forEach((st) => {
-          if (sectionRef.current?.contains(st.trigger as Element)) st.kill();
-        });
-      };
     },
     { scope: sectionRef, dependencies: [state.success] },
   );
