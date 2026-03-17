@@ -184,13 +184,14 @@ export function DomainsArchitect() {
             {/* Central Hub - diamond */}
             <div
               ref={hubRef}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center"
             >
-              <div className="w-20 h-20 border-2 border-primary bg-background flex items-center justify-center rotate-45">
-                <span className="font-mono text-sm font-bold tracking-widest text-primary -rotate-45">
-                  AMG
-                </span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/Anchor-mill-group-logo.webp"
+                alt="Anchor Mill Group"
+                className="w-[80px] brightness-0 dark:brightness-100 dark:invert-0"
+              />
             </div>
 
             {/* Spokes + Connecting Lines */}
