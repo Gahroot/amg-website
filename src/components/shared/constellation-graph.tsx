@@ -88,6 +88,10 @@ export function ConstellationGraph({
     if (link?.distance) link.distance(110);
 
     fg.cameraPosition({ x: 0, y: 0, z: CAMERA_Z });
+
+    // Disable scroll-to-zoom; keep drag/pan
+    const controls = fg.controls() as { enableZoom?: boolean } | undefined;
+    if (controls) controls.enableZoom = false;
   }, [dimensions.width, dimensions.height]);
 
   // Drive auto-rotate via explicit RAF loop (OrbitControls needs update() each frame)
@@ -115,19 +119,30 @@ export function ConstellationGraph({
     const fg = fgRef.current;
     if (!fg) return;
 
+    // Disable scroll-to-zoom on OrbitControls, keep drag/pan
+    const controls = fg.controls() as {
+      enableZoom?: boolean;
+      autoRotate?: boolean;
+      autoRotateSpeed?: number;
+      update?: () => void;
+    } | undefined;
+    if (controls) {
+      controls.enableZoom = false;
+    }
+
     let frameId: number;
 
     function tick() {
       if (!isDraggingRef.current) {
-        const controls = fg?.controls() as {
+        const ctrl = fg?.controls() as {
           autoRotate?: boolean;
           autoRotateSpeed?: number;
           update?: () => void;
         } | undefined;
-        if (controls) {
-          controls.autoRotate = orbitEnabledRef.current;
-          controls.autoRotateSpeed = 0.5;
-          controls.update?.();
+        if (ctrl) {
+          ctrl.autoRotate = orbitEnabledRef.current;
+          ctrl.autoRotateSpeed = 0.5;
+          ctrl.update?.();
         }
       }
       frameId = requestAnimationFrame(tick);
