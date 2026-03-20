@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 export function AboutHero() {
@@ -38,21 +37,8 @@ export function AboutHero() {
   );
 
   return (
-    <section ref={sectionRef} className="relative py-24 lg:py-32 pt-32">
-      {/* Hero background image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/aerial-forest-lake.jpg"
-          alt="Aerial view of a pristine forest lake — strategic clarity from above"
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="py-24 lg:py-32 pt-32 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p
           ref={(el) => {
             itemRefs.current[0] = el;

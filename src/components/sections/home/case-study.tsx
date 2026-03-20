@@ -64,7 +64,13 @@ export function CaseStudy() {
         gsap.set(dots, { scale: 0, autoAlpha: 0 });
         gsap.set(entries, { autoAlpha: 0, y: 20 });
 
-        const tl = gsap.timeline({ delay: 0.3 });
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 75%",
+            once: true,
+          },
+        });
 
         tl.to(progress, { scaleX: 1, duration: 2, ease: "none" });
 
@@ -100,6 +106,7 @@ export function CaseStudy() {
         );
 
         return () => {
+          tl.scrollTrigger?.kill();
           tl.kill();
         };
       }
@@ -108,48 +115,54 @@ export function CaseStudy() {
       if (reducedMotion) return;
       if (!progress || !costEl) return;
 
-      // Progress line
       gsap.set(progress, { scaleX: 0, transformOrigin: "left center" });
-      gsap.to(progress, {
-        scaleX: 1,
-        duration: 2,
-        ease: "none",
-      });
+      gsap.set(dots, { scale: 0, autoAlpha: 0 });
+      gsap.set(entries, { autoAlpha: 0, y: 20 });
 
-      // Dots pop
-      dots.forEach((dot, i) => {
-        gsap.set(dot, { scale: 0, autoAlpha: 0 });
-        gsap.to(dot, {
-          scale: 1,
-          autoAlpha: 1,
-          duration: 0.3,
-          ease: "back.out(2)",
-          delay: i * 0.3,
-        });
-      });
-
-      // Timeline entries fade up
-      entries.forEach((entry, i) => {
-        gsap.set(entry, { autoAlpha: 0, y: 20 });
-        gsap.to(entry, {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.5,
-          ease: "power2.out",
-          delay: i * 0.3 + 0.15,
-        });
-      });
-
-      // Cost counter
-      const proxy = { val: 0 };
-      gsap.to(proxy, {
-        val: 4.2,
-        duration: 2,
-        ease: "power2.in",
-        onUpdate() {
-          costEl.textContent = `$${proxy.val.toFixed(1)}M`;
+      const mobileTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          once: true,
         },
       });
+
+      mobileTl.to(progress, { scaleX: 1, duration: 2, ease: "none" });
+
+      dots.forEach((dot, i) => {
+        mobileTl.to(
+          dot,
+          { scale: 1, autoAlpha: 1, duration: 0.3, ease: "back.out(2)" },
+          i * 0.3,
+        );
+      });
+
+      entries.forEach((entry, i) => {
+        mobileTl.to(
+          entry,
+          { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" },
+          i * 0.3 + 0.15,
+        );
+      });
+
+      const proxy = { val: 0 };
+      mobileTl.to(
+        proxy,
+        {
+          val: 4.2,
+          duration: 2,
+          ease: "power2.in",
+          onUpdate() {
+            costEl.textContent = `$${proxy.val.toFixed(1)}M`;
+          },
+        },
+        0,
+      );
+
+      return () => {
+        mobileTl.scrollTrigger?.kill();
+        mobileTl.kill();
+      };
     },
     { scope: sectionRef, dependencies: [canPin, reducedMotion] },
   );

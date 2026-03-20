@@ -1,14 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 
 const caseStudies = [
   {
     title: "Stabilizing a Family Office",
     client: "$680M AUM family office",
-    image: "/images/stacked-stones.jpg",
     metrics: [
       "Security score improved from 34 to 87",
       "Incident response: 72 hours \u2192 4 hours",
@@ -102,17 +100,6 @@ export function CaseStudies() {
                   <p className="font-mono text-xs uppercase tracking-widest text-primary mb-6">
                     {study.client}
                   </p>
-                  {study.image && (
-                    <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-6">
-                      <Image
-                        src={study.image}
-                        alt={study.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 33vw"
-                      />
-                    </div>
-                  )}
                   <ul className="space-y-3">
                     {study.metrics.map((metric) => (
                       <li key={metric} className="flex items-start gap-3">
