@@ -1,365 +1,338 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
-import Link from "next/link";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import dynamic from "next/dynamic";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
-import { useReducedMotion } from "@/lib/use-can-pin";
+import Link from "next/link";
+import { SectionSkeleton } from "@/components/ui/section-skeleton";
+import { DomainsMobileSpine } from "@/components/shared/domains-mobile-spine";
 import { domains } from "@/lib/domains-data";
+import type { NetworkNode, NetworkLink } from "@/lib/network-data";
+import type { ConstellationGraphAPI } from "@/components/shared/constellation-graph";
 
-/* ------------------------------------------------------------------ */
-/*  Spoke angle positions (evenly distributed around the circle)       */
-/* ------------------------------------------------------------------ */
+const ConstellationGraph = dynamic(
+  () =>
+    import("@/components/shared/constellation-graph").then((m) => m.ConstellationGraph),
+  { ssr: false, loading: () => <SectionSkeleton /> },
+);
 
-const SPOKE_ANGLES = [-90, -18, 54, 126, 198]; // degrees, starting from top
+// Build minimal graph data for the 3D layer
+const RING_RADIUS = 100;
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+function ringPosition(index: number, total: number, radius: number) {
+  const angle = (2 * Math.PI * index) / total;
+  return {
+    x: radius * Math.cos(angle),
+    y: radius * Math.sin(angle),
+    z: Math.sin(index * 2654435761) * 10,
+  };
+}
+
+const DOMAIN_IDS = [
+  "d-neuro",
+  "d-cyber",
+  "d-leadership",
+  "d-medicine",
+  "d-intel",
+];
+
 
 export function Domains() {
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const graphApiRef = useRef<ConstellationGraphAPI | null>(null);
+  const rafRef = useRef<number>(0);
+
+  // DOM refs for position tracking
   const hubRef = useRef<HTMLDivElement>(null);
-  const spokeRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mobileSpineRef = useRef<HTMLDivElement>(null);
-  const mobileRowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  const [activeDomain, setActiveDomain] = useState<number | null>(null);
+  // Graph data for the 3D layer
+  const { nodes, links } = useMemo(() => {
+    const hubNode: NetworkNode = {
+      id: "amg",
+      name: "Anchor Mill Group",
+      group: "hub",
+      val: 10,
+      color: "#8b7d5e",
+      fx: 0,
+      fy: 0,
+      fz: 0,
+    };
 
-  const reducedMotion = useReducedMotion();
+    const domainNodes: NetworkNode[] = domains.map((domain, i) => {
+      const pos = ringPosition(i, domains.length, RING_RADIUS);
+      return {
+        id: DOMAIN_IDS[i],
+        name: domain.title,
+        group: "domain" as const,
+        val: 4,
+        color: "#a89b7e",
+        description: domain.description,
+        ...pos,
+      };
+    });
 
-  const setSpokeRef = useCallback(
-    (i: number) => (el: HTMLDivElement | null) => {
-      spokeRefs.current[i] = el;
-    },
-    []
-  );
+    const domainLinks: NetworkLink[] = DOMAIN_IDS.map((id) => ({
+      source: "amg",
+      target: id,
+    }));
 
-  const setLineRef = useCallback(
-    (i: number) => (el: HTMLDivElement | null) => {
-      lineRefs.current[i] = el;
-    },
-    []
-  );
+    return {
+      nodes: [hubNode, ...domainNodes],
+      links: domainLinks,
+    };
+  }, []);
 
-  const setMobileRowRef = useCallback(
-    (i: number) => (el: HTMLDivElement | null) => {
-      mobileRowRefs.current[i] = el;
-    },
-    []
-  );
+  // Compute highlight node ID for the 3D layer
+  const highlightNodeId = useMemo(() => {
+    if (hoverIndex !== null) return DOMAIN_IDS[hoverIndex];
+    if (selectedIndex !== null) return DOMAIN_IDS[selectedIndex];
+    return null;
+  }, [hoverIndex, selectedIndex]);
 
-  /* ---------------------------------------------------------------- */
-  /*  GSAP entrance animation                                          */
-  /* ---------------------------------------------------------------- */
+  // RAF loop: continuously update DOM overlay positions from 3D node coords
+  useEffect(() => {
+    function updatePositions() {
+      const api = graphApiRef.current;
+      if (api) {
+        // Hub position
+        const hubPos = api.getNodeScreenPosition("amg");
+        if (hubPos && hubRef.current) {
+          hubRef.current.style.left = `${hubPos.x}px`;
+          hubRef.current.style.top = `${hubPos.y}px`;
+        }
 
-  useGSAP(
-    () => {
-      if (reducedMotion) return;
-
-      initGSAP();
-
-      const section = sectionRef.current;
-      const hub = hubRef.current;
-      const spine = mobileSpineRef.current;
-      if (!section) return;
-
-      /* Desktop: hub + spokes */
-      if (hub) {
-        const spokes = spokeRefs.current.filter(Boolean) as HTMLDivElement[];
-        const lines = lineRefs.current.filter(Boolean) as HTMLDivElement[];
-
-        gsap.set(hub, { autoAlpha: 0, scale: 0.6 });
-        gsap.set(lines, { scaleX: 0, transformOrigin: "left center" });
-        gsap.set(spokes, { autoAlpha: 0, scale: 0.8 });
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: "top 75%",
-            once: true,
-          },
-        });
-
-        tl.to(hub, {
-          autoAlpha: 1,
-          scale: 1,
-          duration: 0.5,
-          ease: "back.out(1.7)",
-        });
-        tl.to(
-          lines,
-          {
-            scaleX: 1,
-            duration: 0.4,
-            ease: "power2.out",
-            stagger: 0.08,
-          },
-          0.25
-        );
-        tl.to(
-          spokes,
-          {
-            autoAlpha: 1,
-            scale: 1,
-            duration: 0.4,
-            ease: "power2.out",
-            stagger: 0.08,
-          },
-          0.4
-        );
-
-        return () => {
-          tl.scrollTrigger?.kill();
-          tl.kill();
-        };
+        // Domain card positions
+        for (let i = 0; i < DOMAIN_IDS.length; i++) {
+          const pos = api.getNodeScreenPosition(DOMAIN_IDS[i]);
+          const el = cardRefs.current.get(i);
+          if (pos && el) {
+            el.style.left = `${pos.x}px`;
+            el.style.top = `${pos.y}px`;
+          }
+        }
       }
 
-      /* Mobile: spine + rows */
-      if (spine) {
-        const rows = mobileRowRefs.current.filter(
-          Boolean
-        ) as HTMLDivElement[];
+      rafRef.current = requestAnimationFrame(updatePositions);
+    }
 
-        gsap.set(spine, { scaleY: 0, transformOrigin: "top" });
-        gsap.set(rows, { autoAlpha: 0, y: 20 });
+    rafRef.current = requestAnimationFrame(updatePositions);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: "top 75%",
-            once: true,
-          },
-        });
+  const handleGraphReady = useCallback((api: ConstellationGraphAPI) => {
+    graphApiRef.current = api;
+  }, []);
 
-        tl.to(spine, { scaleY: 1, duration: 0.8, ease: "power2.out" }, 0);
-        tl.to(
-          rows,
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.4,
-            ease: "power2.out",
-            stagger: 0.12,
-          },
-          0.3
-        );
+  const handleCardClick = useCallback(
+    (index: number) => {
+      const api = graphApiRef.current;
+      if (!api) return;
 
-        return () => {
-          tl.scrollTrigger?.kill();
-          tl.kill();
-        };
+      if (selectedIndex === index) {
+        // Deselect
+        setSelectedIndex(null);
+        api.resetCamera();
+        api.setAutoRotate(true);
+      } else {
+        setSelectedIndex(index);
+        api.zoomToNode(DOMAIN_IDS[index]);
+        api.setAutoRotate(false);
       }
     },
-    { scope: sectionRef, dependencies: [reducedMotion] }
+    [selectedIndex],
   );
 
-  /* ---------------------------------------------------------------- */
-  /*  Detail panel (shown below diagram when a domain is selected)     */
-  /* ---------------------------------------------------------------- */
+  const handleHubClick = useCallback(() => {
+    const api = graphApiRef.current;
+    if (!api) return;
+    setSelectedIndex(null);
+    api.resetCamera();
+    api.setAutoRotate(true);
+  }, []);
 
-  const activeData = activeDomain !== null ? domains[activeDomain] : null;
+  const handleBackdropClick = useCallback(() => {
+    const api = graphApiRef.current;
+    if (!api) return;
+    setSelectedIndex(null);
+    api.resetCamera();
+    api.setAutoRotate(true);
+  }, []);
 
-  /* ---------------------------------------------------------------- */
-  /*  Render                                                           */
-  /* ---------------------------------------------------------------- */
+  // Escape key to dismiss
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleBackdropClick();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex, handleBackdropClick]);
+
+  const isExpanded = selectedIndex !== null;
 
   return (
-    <section ref={sectionRef} id="domains" className="relative z-10 py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <p className="font-mono text-xs uppercase tracking-widest text-primary mb-4">
-          OUR DOMAINS
+        <p className="mb-4 font-mono text-xs uppercase tracking-widest text-primary">
+          Strategic Domains
         </p>
-        <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl tracking-tight mb-16 lg:mb-20">
-          An Integrated Suite of Capabilities
+        <h2 className="mb-16 font-serif text-3xl tracking-tight md:text-4xl lg:mb-20 lg:text-5xl">
+          Five disciplines, one integrated framework
         </h2>
 
-        {/* -------------------------------------------------------- */}
-        {/*  Desktop: Hub-and-spoke radial layout                     */}
-        {/* -------------------------------------------------------- */}
-        <div className="hidden md:flex flex-col items-center">
-          <div className="relative w-full max-w-[640px] aspect-square">
-            {/* Central Hub */}
+        {/* Desktop: 3D constellation + DOM overlays */}
+        <div className="relative hidden md:block" style={{ height: 640 }}>
+          {/* 3D graph layer */}
+          <ConstellationGraph
+            nodes={nodes}
+            links={links}
+            centerNodeId="amg"
+            height={640}
+            highlightNodeId={highlightNodeId}
+            onReady={handleGraphReady}
+          />
+
+          {/* DOM overlay layer */}
+          <div className="pointer-events-none absolute inset-0" style={{ zIndex: 1 }}>
+            {/* Dismiss backdrop */}
+            {isExpanded && (
+              <div
+                className="pointer-events-auto absolute inset-0"
+                onClick={handleBackdropClick}
+              />
+            )}
+
+            {/* Hub logo mark */}
             <div
               ref={hubRef}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+              className="pointer-events-auto absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-3"
+              onClick={handleHubClick}
+              style={{ left: "50%", top: "50%" }}
             >
-              <div className="w-20 h-20 border-2 border-primary bg-background flex items-center justify-center rotate-45">
-                <span className="font-mono text-sm font-bold tracking-widest text-primary -rotate-45">
-                  AMG
-                </span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/Anchor-mill-group-logo.webp"
+                alt="Anchor Mill Group"
+                className="w-[80px] brightness-0 dark:brightness-100 dark:invert-0"
+                style={{ opacity: 0.7 }}
+              />
+              <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.25em] text-primary/50">
+                Anchor Mill Group
+              </span>
             </div>
 
-            {/* Spokes + Connecting Lines */}
+            {/* Domain cards */}
             {domains.map((domain, i) => {
-              const angle = SPOKE_ANGLES[i];
-              const rad = (angle * Math.PI) / 180;
-              const radius = 44; // % from center
-              const x = 50 + radius * Math.cos(rad);
-              const y = 50 + radius * Math.sin(rad);
-
-              // Line geometry: from center to spoke
-              const lineLength = Math.sqrt(
-                Math.pow((x - 50) * 6.4, 2) + Math.pow((y - 50) * 6.4, 2)
-              );
-              const lineAngle = Math.atan2((y - 50), (x - 50)) * (180 / Math.PI);
+              const isSelected = selectedIndex === i;
+              const isDimmed = isExpanded && !isSelected;
+              const isHovered = hoverIndex === i;
+              const Icon = domain.icon;
 
               return (
-                <div key={domain.title}>
-                  {/* Connecting line */}
-                  <div
-                    ref={setLineRef(i)}
-                    className="absolute origin-left"
-                    style={{
-                      left: "50%",
-                      top: "50%",
-                      width: `${lineLength}px`,
-                      height: "1px",
-                      backgroundColor: "var(--primary)",
-                      opacity: 0.3,
-                      transform: `rotate(${lineAngle}deg)`,
+                <div
+                  key={domain.title}
+                  ref={(el) => {
+                    if (el) cardRefs.current.set(i, el);
+                    else cardRefs.current.delete(i);
+                  }}
+                  className="pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: "50%", top: "50%", zIndex: isSelected ? 30 : 20 }}
+                >
+                  <motion.div
+                    className="cursor-pointer"
+                    animate={{
+                      opacity: isDimmed ? 0.25 : 1,
+                      scale: isDimmed ? 0.9 : isHovered ? 1.05 : 1,
                     }}
-                  />
-
-                  {/* Spoke node */}
-                  <div
-                    ref={setSpokeRef(i)}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-                    style={{
-                      left: `${x}%`,
-                      top: `${y}%`,
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick(i);
                     }}
+                    onMouseEnter={() => setHoverIndex(i)}
+                    onMouseLeave={() => setHoverIndex(null)}
                   >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActiveDomain(activeDomain === i ? null : i)
-                      }
-                      className={`group flex flex-col items-center text-center transition-all duration-300 cursor-pointer ${
-                        activeDomain === i
-                          ? "scale-110"
-                          : "hover:scale-105"
-                      }`}
+                    <motion.div
+                      className="rounded-lg border border-primary/20 bg-card/90 shadow-sm backdrop-blur-sm"
+                      layout
+                      transition={{
+                        layout: {
+                          duration: 0.4,
+                          ease: [0.25, 0.1, 0.25, 1],
+                        },
+                      }}
+                      style={{
+                        boxShadow: isSelected
+                          ? "0 8px 32px rgba(139, 125, 94, 0.15)"
+                          : isHovered
+                            ? "0 4px 16px rgba(139, 125, 94, 0.1)"
+                            : "0 2px 8px rgba(139, 125, 94, 0.06)",
+                        minWidth: isSelected ? 280 : 180,
+                      }}
                     >
-                      {/* Node dot */}
-                      <div
-                        className={`w-3 h-3 rounded-full border-2 transition-colors duration-300 mb-2 ${
-                          activeDomain === i
-                            ? "bg-primary border-primary"
-                            : "bg-background border-primary/50 group-hover:border-primary"
-                        }`}
-                      />
-                      {/* Label */}
-                      <span
-                        className={`font-mono text-[10px] uppercase tracking-widest leading-tight max-w-[120px] transition-colors duration-300 ${
-                          activeDomain === i
-                            ? "text-primary font-semibold"
-                            : "text-muted-foreground group-hover:text-foreground"
-                        }`}
-                      >
-                        {domain.title}
-                      </span>
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-2.5 px-4 py-3">
+                        <Icon
+                          className="h-4 w-4 shrink-0 text-primary"
+                          strokeWidth={1.5}
+                        />
+                        <span className="whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-wider text-primary">
+                          {domain.title}
+                        </span>
+                      </div>
+
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{
+                              height: {
+                                duration: 0.35,
+                                ease: [0.25, 0.1, 0.25, 1],
+                              },
+                              opacity: { duration: 0.25, delay: 0.1 },
+                            }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t border-primary/10 px-4 pb-4 pt-3">
+                              <p className="font-sans text-sm leading-relaxed text-muted-foreground">
+                                {domain.description}
+                              </p>
+                              <Link
+                                href="/strategies"
+                                className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-primary transition-colors hover:text-primary/70"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                Learn more
+                                <ArrowRight className="h-3 w-3" />
+                              </Link>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </motion.div>
                 </div>
               );
             })}
           </div>
-
-          {/* Detail panel */}
-          <div
-            className="w-full max-w-lg text-center mt-8 overflow-hidden transition-all duration-300"
-            style={{
-              maxHeight: activeData ? "300px" : "0",
-              opacity: activeData ? 1 : 0,
-            }}
-          >
-            {activeData && (
-              <div className="py-4">
-                <h3 className="font-serif text-2xl tracking-tight mb-3">
-                  {activeData.title}
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {activeData.description}
-                </p>
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-                  {activeData.capabilities.map((cap) => (
-                    <span
-                      key={cap}
-                      className="font-mono text-xs text-foreground"
-                    >
-                      {cap}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* -------------------------------------------------------- */}
-        {/*  Mobile: Vertical spine layout                            */}
-        {/* -------------------------------------------------------- */}
-        <div className="md:hidden">
-          <div className="relative pl-12">
-            {/* Spine */}
-            <div
-              ref={mobileSpineRef}
-              className="absolute left-[7px] top-0 bottom-0 w-px bg-primary/20 origin-top"
-            />
-
-            {/* Domain list */}
-            <div className="space-y-10">
-              {domains.map((domain, i) => (
-                <div
-                  key={domain.title}
-                  ref={setMobileRowRef(i)}
-                  className="flex items-start"
-                >
-                  {/* Connector */}
-                  <div className="flex items-center shrink-0 mt-1.5 -ml-12">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                    <div className="w-10 h-px bg-primary/20 ml-px" />
-                  </div>
-
-                  {/* Content */}
-                  <div className="ml-1">
-                    <h4 className="font-mono text-sm uppercase tracking-widest font-semibold mb-2 text-foreground">
-                      {domain.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                      {domain.description}
-                    </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {domain.capabilities.map((cap) => (
-                        <span
-                          key={cap}
-                          className="font-mono text-[11px] text-muted-foreground"
-                        >
-                          {cap}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="flex justify-center mt-12">
-          <Link
-            href="/strategies"
-            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary hover:text-foreground transition-colors group"
-          >
-            Discover How AMG Works
-            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
+        {/* Mobile: spine layout */}
+        <DomainsMobileSpine domains={domains} />
       </div>
     </section>
   );
