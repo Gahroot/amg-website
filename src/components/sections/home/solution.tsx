@@ -108,7 +108,7 @@ export function Solution() {
   return (
     <section ref={sectionRef} id="solution" className="py-24 lg:py-32">
       {/* Charcoal callout bar */}
-      <div className="bg-charcoal text-foreground py-12 mb-16 lg:mb-20">
+      <div className="bg-charcoal text-background py-12 mb-16 lg:mb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="font-serif text-xl md:text-2xl lg:text-3xl tracking-tight italic">
             Turn risk into foresight. Turn foresight into action.

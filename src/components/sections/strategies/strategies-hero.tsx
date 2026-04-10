@@ -76,7 +76,7 @@ export function StrategiesHero() {
           ref={(el) => {
             itemRefs.current[1] = el;
           }}
-          className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl tracking-tight text-foreground mb-6 max-w-4xl"
+          className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl tracking-tight text-background mb-6 max-w-4xl"
         >
           Sovereign Global Ecosystem
         </h1>
@@ -84,7 +84,7 @@ export function StrategiesHero() {
           ref={(el) => {
             itemRefs.current[2] = el;
           }}
-          className="text-lg sm:text-xl text-foreground/60 max-w-3xl"
+          className="text-lg sm:text-xl text-background/60 max-w-3xl"
         >
           Five specialized domains — unified under one strategic command layer
           — delivering comprehensive protection, optimized performance, and

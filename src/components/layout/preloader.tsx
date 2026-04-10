@@ -26,12 +26,31 @@ export function Preloader({ onComplete }: PreloaderProps) {
 
       initGSAP();
 
-      const tl = gsap.timeline({
-        onComplete: () => {
-          document.body.style.overflow = "";
-          onComplete();
-        },
-      });
+      let tl: gsap.core.Timeline | null = null;
+      let cancelled = false;
+      let started = false;
+
+      const start = () => {
+        if (cancelled || started || !containerRef.current) return;
+        started = true;
+
+        tl = gsap.timeline({
+          onComplete: () => {
+            document.body.style.overflow = "";
+            // Release will-change so later compositing isn't pinned
+            gsap.set(
+              [
+                ".preloader-logo",
+                ".preloader-wordmark",
+                ".preloader-rule",
+                ".preloader-panel-top",
+                ".preloader-panel-bottom",
+              ],
+              { willChange: "auto" }
+            );
+            onComplete();
+          },
+        });
 
       // Logo fades in + scale up (power3.out for smooth ease)
       tl.fromTo(
@@ -90,6 +109,22 @@ export function Preloader({ onComplete }: PreloaderProps) {
         },
         "<"
       );
+      };
+
+      // Wait for fonts so the wordmark doesn't reflow mid-animation.
+      // Fall back to a short timeout if fonts.ready never resolves.
+      const fontsReady = document.fonts?.ready ?? Promise.resolve();
+      const timeoutId = window.setTimeout(start, 300);
+      fontsReady.then(() => {
+        window.clearTimeout(timeoutId);
+        start();
+      });
+
+      return () => {
+        cancelled = true;
+        window.clearTimeout(timeoutId);
+        tl?.kill();
+      };
     },
     { scope: containerRef, dependencies: [onComplete] }
   );
@@ -102,29 +137,45 @@ export function Preloader({ onComplete }: PreloaderProps) {
       style={{ backgroundColor: "var(--background)" }}
     >
       {/* Split panels for curtain reveal */}
-      <div className="preloader-panel-top absolute inset-0 bottom-1/2 bg-background" />
-      <div className="preloader-panel-bottom absolute inset-0 top-1/2 bg-background" />
+      <div
+        className="preloader-panel-top absolute inset-0 bottom-1/2 bg-background"
+        style={{ willChange: "transform" }}
+      />
+      <div
+        className="preloader-panel-bottom absolute inset-0 top-1/2 bg-background"
+        style={{ willChange: "transform" }}
+      />
 
       {/* Centered logo reveal */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {/* Logo image with luxury styling */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/Anchor-mill-group-logo.webp"
-          alt="Anchor Mill Group"
-          className="preloader-logo w-[120px] md:w-[180px] opacity-0 brightness-0"
-        />
+        {/* Logo image with luxury styling.
+            Filter lives on the child so the animated wrapper stays filter-free. */}
+        <div
+          className="preloader-logo w-[120px] md:w-[180px] opacity-0"
+          style={{ willChange: "transform, opacity" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/Anchor-mill-group-logo.webp"
+            alt="Anchor Mill Group"
+            className="w-full brightness-0"
+          />
+        </div>
 
         {/* Brand name in elegant typography */}
         <h1
           className="preloader-wordmark font-serif italic text-lg md:text-xl
                      tracking-widest text-primary mt-6 opacity-0"
+          style={{ willChange: "transform, opacity" }}
         >
           ANCHOR MILL GROUP
         </h1>
 
         {/* Decorative rule */}
-        <div className="preloader-rule mt-4 h-px w-32 bg-primary/50 origin-left" />
+        <div
+          className="preloader-rule mt-4 h-px w-32 bg-primary/50 origin-left"
+          style={{ willChange: "transform" }}
+        />
       </div>
     </div>
   );

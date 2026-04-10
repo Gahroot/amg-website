@@ -85,19 +85,23 @@ export function HomeClient() {
   return (
     <>
       {!preloaderDone && <Preloader onComplete={handlePreloaderComplete} />}
-      <CustomCursor />
-      <Navbar />
-      <main id="main-content">
-        <Hero />
-        <Problem />
-        <BlindSpots />
-        <Solution />
-        <Metrics />
-        <Domains />
-        <CaseStudy />
-        <CTA />
-      </main>
-      <Footer />
+      {preloaderDone && (
+        <>
+          <CustomCursor />
+          <Navbar />
+          <main id="main-content">
+            <Hero />
+            <Problem />
+            <BlindSpots />
+            <Solution />
+            <Metrics />
+            <Domains />
+            <CaseStudy />
+            <CTA />
+          </main>
+          <Footer />
+        </>
+      )}
     </>
   );
 }

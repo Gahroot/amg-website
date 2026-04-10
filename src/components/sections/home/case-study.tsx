@@ -184,7 +184,7 @@ export function CaseStudy() {
       <div className="relative">
         {/* Progress line */}
         {animated && (
-          <div className="absolute top-4 left-0 right-0 h-px bg-foreground/10">
+          <div className="absolute top-4 left-0 right-0 h-px bg-background/10">
             <div
               ref={progressRef}
               className="absolute inset-0 h-full bg-primary"
@@ -202,7 +202,7 @@ export function CaseStudy() {
                   ref={(el) => {
                     dotRefs.current[i] = el;
                   }}
-                  className="absolute top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary border-2 border-foreground"
+                  className="absolute top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary border-2 border-background"
                 />
               )}
 
@@ -218,7 +218,7 @@ export function CaseStudy() {
                 <span className="font-mono text-xs uppercase tracking-widest text-primary block mb-2">
                   {entry.day}
                 </span>
-                <p className="text-sm text-foreground/70 leading-relaxed">
+                <p className="text-sm text-background/70 leading-relaxed">
                   {entry.text}
                 </p>
               </div>
@@ -231,11 +231,11 @@ export function CaseStudy() {
       <div className="mt-16 text-center">
         <span
           ref={animated ? costRef : undefined}
-          className="block font-serif text-5xl md:text-6xl text-foreground tabular-nums"
+          className="block font-serif text-5xl md:text-6xl text-background tabular-nums"
         >
           {animated ? "$0.0M" : "$4.2M"}
         </span>
-        <span className="block font-mono text-xs uppercase tracking-widest text-foreground/40 mt-2">
+        <span className="block font-mono text-xs uppercase tracking-widest text-background/40 mt-2">
           Total cost in 45 days
         </span>
       </div>
@@ -254,7 +254,7 @@ export function CaseStudy() {
   );
 
   return (
-    <section ref={sectionRef} className="bg-charcoal text-foreground">
+    <section ref={sectionRef} className="bg-charcoal text-background">
       {canPin ? (
         /* Desktop: full-height container (no pin) */
         <div
