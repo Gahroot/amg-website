@@ -4,6 +4,7 @@ interface LegalPageProps {
   eyebrow: string;
   title: string;
   effectiveDate: string;
+  lastUpdated?: string;
   intro: string;
   children: ReactNode;
 }
@@ -12,6 +13,7 @@ export function LegalPage({
   eyebrow,
   title,
   effectiveDate,
+  lastUpdated,
   intro,
   children,
 }: LegalPageProps) {
@@ -25,9 +27,10 @@ export function LegalPage({
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground mb-6">
             {title}
           </h1>
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-6">
-            Effective {effectiveDate}
-          </p>
+          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-6 space-y-1">
+            <p>Effective {effectiveDate}</p>
+            {lastUpdated ? <p>Last Updated {lastUpdated}</p> : null}
+          </div>
           <p className="text-lg text-muted-foreground">{intro}</p>
         </header>
 
