@@ -105,9 +105,19 @@ export function Footer() {
             reserved.
           </p>
           <div className="flex items-center gap-4">
-            <span>Privacy Policy</span>
+            <Link
+              href="/privacy"
+              className="hover:text-background transition-colors"
+            >
+              Privacy Policy
+            </Link>
             <span>|</span>
-            <span>Terms of Service</span>
+            <Link
+              href="/terms"
+              className="hover:text-background transition-colors"
+            >
+              Terms of Service
+            </Link>
             <span>|</span>
             <span>Confidential</span>
           </div>
