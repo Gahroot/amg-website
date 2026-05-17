@@ -48,3 +48,5 @@ next-env.d.ts
 .dev.vars*
 !.dev.vars.example
 !.env.example
+# legal source documents (not site assets)
+/AMG_*.pdf
