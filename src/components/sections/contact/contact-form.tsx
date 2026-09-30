@@ -126,7 +126,7 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                 Thank You
               </h2>
               <p className="font-serif italic text-xl text-muted-foreground mb-4">
-                Your enquiry is in trusted hands.
+                Your inquiry is in trusted hands.
               </p>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
                 Your message has been received. A member of our team will reach
