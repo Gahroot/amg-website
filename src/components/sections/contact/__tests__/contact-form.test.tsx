@@ -48,8 +48,21 @@ describe("ContactForm", () => {
     expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^organization$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^phone/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^message$/i)).toBeInTheDocument();
+  });
+
+  it("renders an unchecked SMS consent checkbox with policy links", () => {
+    render(<ContactForm />);
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: /agree to receive recurring marketing and informational text messages from Anchor Mill Group/i,
+    });
+    expect(checkbox).not.toBeChecked();
+    expect(screen.getByRole("link", { name: /anchormillgroup\.com\/privacy/i }))
+      .toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: /anchormillgroup\.com\/terms/i }))
+      .toHaveAttribute("href", "/terms");
   });
 
   it("renders submit button with 'Send Message' text", () => {

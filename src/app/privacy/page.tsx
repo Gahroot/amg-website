@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
           eyebrow="Legal"
           title="Privacy Policy"
           effectiveDate="May 13, 2025"
-          lastUpdated="May 13, 2026"
+          lastUpdated="September 30, 2026"
           intro={`Anchor Mill Group, Inc. ("AMG," "we," "us," or "our") is a Delaware corporation providing integrated advisory services to ultra-high-net-worth individuals ("UHNWI"), family offices, and global executives. Our services span cybersecurity and executive protection, geopolitical risk and business intelligence, global transportation and logistics, leadership development and neurobiology, and integrative health and medicine.`}
         >
           <LegalSection id="introduction" number="01" title="Introduction and Scope">
@@ -175,12 +175,15 @@ export default function PrivacyPolicyPage() {
                 4.1 Service Partners and Subcontractors.
               </strong>{" "}
               AMG operates through a curated ecosystem of domain experts. We
-              may share your information with vetted partner firms and
+              may share your information, other than mobile information as
+              described in Section 4.6, with vetted partner firms and
               subcontractors who provide services under AMG&apos;s direction
               and under confidentiality obligations no less protective than
               this Policy. All third-party partners are contractually bound to
               use your information solely to perform services on AMG&apos;s
-              behalf.
+              behalf. This Section 4.1 does not apply to mobile phone numbers
+              or SMS consent data, which are never shared with service
+              partners, subcontractors, or other third parties or affiliates.
             </p>
             <p>
               <strong className="text-foreground">
@@ -217,6 +220,18 @@ export default function PrivacyPolicyPage() {
               We may use and disclose aggregated, anonymized, or de-identified
               information that cannot reasonably be used to identify you for
               research, service improvement, and industry analysis purposes.
+            </p>
+            <p>
+              <strong className="text-foreground">
+                4.6 Mobile Information and Text Messaging.
+              </strong>{" "}
+              We collect your mobile phone number and SMS consent only to send
+              the text messages you requested. No mobile information will be
+              shared with third parties or affiliates for marketing or
+              promotional purposes. Text messaging originator opt-in data and
+              consent will not be shared with any third parties. Message
+              frequency varies. Message and data rates may apply. Reply STOP
+              to opt out or HELP for help.
             </p>
           </LegalSection>
 

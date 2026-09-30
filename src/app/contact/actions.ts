@@ -26,6 +26,9 @@ export async function submitContactForm(
     phone: formData.get("phone") as string ?? "",
     message: formData.get("message") as string ?? "",
   };
+  // Consent is only meaningful when a phone number was provided.
+  const smsConsent =
+    formData.get("smsConsent") === "yes" && raw.phone.trim() !== "";
 
   const result = contactSchema.safeParse(raw);
 
@@ -48,6 +51,7 @@ export async function submitContactForm(
     email: result.data.email,
     organization: result.data.organization,
     phone: result.data.phone ?? "(not provided)",
+    smsConsent,
     timestamp: new Date().toISOString(),
   });
 
