@@ -24,6 +24,7 @@ export default function TermsPage() {
           eyebrow="Legal"
           title="Terms of Service"
           effectiveDate="January 1, 2026"
+          lastUpdated="September 30, 2026"
           intro="These Terms of Service (“Terms”) govern your access to and use of anchormillgroup.com and any related content, forms, and communications (collectively, the “Site”) provided by Anchor Mill Group Inc. (“AMG,” “we,” “our,” or “us”). By using the Site, you agree to these Terms."
         >
           <LegalSection id="acceptance" number="01" title="Acceptance of Terms">
@@ -250,7 +251,36 @@ export default function TermsPage() {
             </p>
           </LegalSection>
 
-          <LegalSection id="contact" number="16" title="Contact">
+          <LegalSection id="sms" number="16" title="SMS Text Messaging Program">
+            <p>
+              <strong className="text-foreground">
+                SMS Text Messaging Program:
+              </strong>{" "}
+              By opting in on anchormillgroup.com, you agree to receive
+              recurring marketing and informational text messages from Anchor
+              Mill Group, including invitations to briefings, service
+              announcements, and updates about our advisory offerings. Message
+              frequency varies. Message and data rates may apply. Reply STOP to
+              the number you received messages from to opt out at any time, or
+              HELP for help. Carriers are not liable for delayed or
+              undelivered messages. Consent is not a condition of purchase.
+              Your information is never shared with third parties for marketing
+              purposes; see our Privacy Policy at{" "}
+              <Link href="/privacy" className="text-primary hover:underline">
+                https://anchormillgroup.com/privacy
+              </Link>
+              . Contact:{" "}
+              <a
+                href={`mailto:${siteConfig.email}`}
+                className="text-primary hover:underline"
+              >
+                {siteConfig.email}
+              </a>
+              .
+            </p>
+          </LegalSection>
+
+          <LegalSection id="contact" number="17" title="Contact">
             <p>
               Questions about these Terms may be sent to{" "}
               <a

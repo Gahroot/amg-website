@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useActionState } from "react";
+import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -273,6 +274,40 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                     onChange={handleFieldChange}
                     className="bg-background h-12 px-4 focus-visible:ring-primary/50"
                   />
+                  <div className="flex items-start gap-3 pt-2">
+                    <input
+                      id="smsConsent"
+                      name="smsConsent"
+                      type="checkbox"
+                      value="yes"
+                      className="mt-1 size-4 shrink-0 cursor-pointer accent-primary"
+                    />
+                    <label
+                      htmlFor="smsConsent"
+                      className="text-xs leading-relaxed text-muted-foreground"
+                    >
+                      By checking this box and providing my phone number, I agree
+                      to receive recurring marketing and informational text messages
+                      from Anchor Mill Group at the number provided. Consent is
+                      not a condition of purchase. Message frequency varies.
+                      Message &amp; data rates may apply. Reply STOP to opt out at
+                      any time or HELP for help. See our Privacy Policy (
+                      <Link
+                        href="/privacy"
+                        className="text-primary hover:underline"
+                      >
+                        https://anchormillgroup.com/privacy
+                      </Link>
+                      ) and Terms of Service (
+                      <Link
+                        href="/terms"
+                        className="text-primary hover:underline"
+                      >
+                        https://anchormillgroup.com/terms
+                      </Link>
+                      ).
+                    </label>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
