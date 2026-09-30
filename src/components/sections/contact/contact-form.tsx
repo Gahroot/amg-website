@@ -335,6 +335,12 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                   )}
                 </div>
 
+                {state.formError && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {state.formError}
+                  </p>
+                )}
+
                 <Button
                   type="submit"
                   size="lg"
