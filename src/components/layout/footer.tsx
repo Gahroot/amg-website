@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer
       role="contentinfo"
-      className="bg-charcoal text-background"
+      className="relative z-10 bg-charcoal text-background"
     >
       {/* Top rule */}
       <div className="h-px bg-background/15" />

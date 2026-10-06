@@ -87,7 +87,7 @@ export function Hero() {
       className="relative min-h-screen flex items-center justify-center lg:justify-end overflow-hidden"
     >
       {/* Fixed Background Video for parallax effect */}
-      <div ref={bgRef} className="fixed inset-0 z-0 bg-black">
+      <div ref={bgRef} className="fixed inset-0 z-0 bg-black pointer-events-none">
         <video
           ref={videoRef}
           autoPlay

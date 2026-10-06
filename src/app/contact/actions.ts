@@ -1,6 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { siteConfig } from "@/lib/site-config";
+import { deliverContactSubmission } from "@/lib/contact-delivery";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -13,6 +15,7 @@ const contactSchema = z.object({
 export type ContactFormState = {
   success: boolean;
   errors: Partial<Record<"name" | "organization" | "email" | "phone" | "message", string>>;
+  formError?: string;
 };
 
 export async function submitContactForm(
@@ -43,17 +46,31 @@ export async function submitContactForm(
     return { success: false, errors };
   }
 
-  // TODO: Integrate email service (e.g., Resend, SendGrid)
+  const outcome = await deliverContactSubmission(
+    {
+      name: result.data.name,
+      organization: result.data.organization,
+      email: result.data.email,
+      phone: result.data.phone || undefined,
+      message: result.data.message,
+      smsConsent,
+    },
+    process.env,
+  );
 
-  // Log submission metadata (excluding message body for privacy)
-  console.log("[Contact Form Submission]", {
-    name: result.data.name,
-    email: result.data.email,
-    organization: result.data.organization,
-    phone: result.data.phone ?? "(not provided)",
-    smsConsent,
-    timestamp: new Date().toISOString(),
-  });
+  if (!outcome.ok) {
+    // In local dev with nothing configured, don't block the form.
+    if (outcome.reason === "not-configured" && process.env.NODE_ENV !== "production") {
+      console.warn("[Contact Form] No delivery channel configured; submission not sent.");
+      return { success: true, errors: {} };
+    }
+    console.error("[Contact Form] Submission could not be delivered", outcome.reason);
+    return {
+      success: false,
+      errors: {},
+      formError: `We couldn't send your message. Please email ${siteConfig.email} directly.`,
+    };
+  }
 
   return { success: true, errors: {} };
 }
