@@ -65,6 +65,60 @@ async function sendEmail(
   if (!res.ok) throw new Error(`resend responded ${res.status}`);
 }
 
+export const AUTO_REPLY_SUBJECT = "Thank you for contacting Anchor Mill Group";
+
+export const AUTO_REPLY_TEXT =
+  "Thank you so much for your inquiry to work with Anchor Mill Group. We take privacy, security, and your legacy very seriously. A team leader will be in touch with you shortly and we look forward to continuing our discovery of if working together is a good fit.";
+
+/** Sends the acknowledgement to the person who submitted the form. */
+async function sendAutoReply(
+  submission: ContactSubmission,
+  env: DeliveryEnv,
+  id: string,
+): Promise<void> {
+  const apiKey = env.RESEND_API_KEY;
+  const from = env.CONTACT_FROM_EMAIL;
+  if (!apiKey || !from) throw new Error("email not configured");
+
+  const res = await fetch(RESEND_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `${id}-auto-reply`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [submission.email],
+      reply_to: siteConfig.email,
+      subject: AUTO_REPLY_SUBJECT,
+      text: AUTO_REPLY_TEXT,
+    }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`resend auto-reply responded ${res.status}`);
+}
+
+/**
+ * Internal notification first; the auto-reply is best-effort so a failed
+ * acknowledgement never marks the (already delivered) inquiry as failed.
+ */
+async function sendEmailChannel(
+  submission: ContactSubmission,
+  env: DeliveryEnv,
+  id: string,
+): Promise<void> {
+  await sendEmail(submission, env, id);
+  try {
+    await sendAutoReply(submission, env, id);
+  } catch (error) {
+    console.error("[Contact Auto-Reply Failed]", {
+      id,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
+
 async function syncToPortal(
   submission: ContactSubmission,
   env: DeliveryEnv,
@@ -113,7 +167,7 @@ export async function deliverContactSubmission(
 
   const channels: { name: DeliveryChannel; run: () => Promise<void> }[] = [];
   if (isEmailConfigured(env)) {
-    channels.push({ name: "email", run: () => sendEmail(submission, env, id) });
+    channels.push({ name: "email", run: () => sendEmailChannel(submission, env, id) });
   }
   if (env.PORTAL_WEBHOOK_URL) {
     channels.push({

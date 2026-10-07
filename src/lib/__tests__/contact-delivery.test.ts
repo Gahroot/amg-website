@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deliverContactSubmission } from "../contact-delivery";
+import { AUTO_REPLY_TEXT, deliverContactSubmission } from "../contact-delivery";
 
 const submission = {
   name: "Jane Doe",
@@ -32,7 +32,31 @@ describe("deliverContactSubmission", () => {
     const fetchMock = mockFetch(() => true);
     const outcome = await deliverContactSubmission(submission, fullEnv);
     expect(outcome).toEqual({ ok: true, delivered: ["email", "portal"], failed: [] });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("sends the auto-reply to the submitter", async () => {
+    const fetchMock = mockFetch(() => true);
+    await deliverContactSubmission(submission, fullEnv);
+    const bodies = fetchMock.mock.calls
+      .filter(([url]) => String(url).includes("resend"))
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    const reply = bodies.find((b) => b.to[0] === submission.email);
+    expect(reply?.text).toBe(AUTO_REPLY_TEXT);
+  });
+
+  it("does not fail the inquiry when the auto-reply fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    let resendCalls = 0;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      if (String(input).includes("resend")) {
+        resendCalls += 1;
+        return new Response(null, { status: resendCalls === 1 ? 200 : 500 });
+      }
+      return new Response(null, { status: 200 });
+    });
+    const outcome = await deliverContactSubmission(submission, fullEnv);
+    expect(outcome).toEqual({ ok: true, delivered: ["email", "portal"], failed: [] });
   });
 
   it("still succeeds when only the portal fails", async () => {
