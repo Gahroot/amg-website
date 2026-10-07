@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AUTO_REPLY_TEXT, deliverContactSubmission } from "../contact-delivery";
+import { deliverContactSubmission } from "../contact-delivery";
+import { AUTO_REPLY_HTML, AUTO_REPLY_TEXT, EMAIL_LOGO_URL } from "../auto-reply-email";
 
 const submission = {
   name: "Jane Doe",
@@ -43,6 +44,14 @@ describe("deliverContactSubmission", () => {
       .map(([, init]) => JSON.parse(String(init?.body)));
     const reply = bodies.find((b) => b.to[0] === submission.email);
     expect(reply?.text).toBe(AUTO_REPLY_TEXT);
+    expect(reply?.html).toBe(AUTO_REPLY_HTML);
+  });
+
+  it("brands the auto-reply with a serif font and the AMG logo signature", () => {
+    expect(AUTO_REPLY_HTML).toContain("font-family:Georgia");
+    expect(AUTO_REPLY_HTML).toContain(`src="${EMAIL_LOGO_URL}"`);
+    expect(EMAIL_LOGO_URL).toMatch(/^https:\/\/.+\.png$/);
+    expect(AUTO_REPLY_TEXT).toContain("Anchor Mill Group\nResilience");
   });
 
   it("does not fail the inquiry when the auto-reply fails", async () => {

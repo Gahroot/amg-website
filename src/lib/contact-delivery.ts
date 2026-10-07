@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { siteConfig } from "@/lib/site-config";
+import {
+  AUTO_REPLY_HTML,
+  AUTO_REPLY_SUBJECT,
+  AUTO_REPLY_TEXT,
+} from "@/lib/auto-reply-email";
 
 export type ContactSubmission = {
   name: string;
@@ -65,11 +70,6 @@ async function sendEmail(
   if (!res.ok) throw new Error(`resend responded ${res.status}`);
 }
 
-export const AUTO_REPLY_SUBJECT = "Thank you for contacting Anchor Mill Group";
-
-export const AUTO_REPLY_TEXT =
-  "Thank you so much for your inquiry to work with Anchor Mill Group. We take privacy, security, and your legacy very seriously. A team leader will be in touch with you shortly and we look forward to continuing our discovery of if working together is a good fit.";
-
 /** Sends the acknowledgement to the person who submitted the form. */
 async function sendAutoReply(
   submission: ContactSubmission,
@@ -92,6 +92,7 @@ async function sendAutoReply(
       to: [submission.email],
       reply_to: siteConfig.email,
       subject: AUTO_REPLY_SUBJECT,
+      html: AUTO_REPLY_HTML,
       text: AUTO_REPLY_TEXT,
     }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
