@@ -228,6 +228,8 @@ describe("ContactForm", () => {
     await fillAndSubmit(user);
 
     expect(await screen.findByText("Thank You")).toBeInTheDocument();
+    expect(screen.getByText(/no appointment has been booked/i))
+      .toHaveTextContent(/a member of our team will review your request and reach out within 24 hours to arrange your confidential discovery/i);
   });
 
   it("success state has 'Send Another Message' button", async () => {
@@ -271,6 +273,10 @@ describe("ContactForm", () => {
       screen.getByText("Begin Your Confidential Discovery"),
     ).toBeInTheDocument();
     expect(screen.getByText("Get in Touch")).toBeInTheDocument();
+    expect(screen.getByText(/submitting this form does not book an appointment/i))
+      .toHaveTextContent(/a member of our team will review your inquiry and follow up to arrange a conversation/i);
+    expect(screen.getByText("We respond within 24 hours to all inquiries."))
+      .toBeInTheDocument();
   });
 
   it("renders the email link", () => {

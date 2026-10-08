@@ -25,6 +25,10 @@ describe("siteConfig", () => {
     expect(siteConfig.portalUrl).toMatch(/^https:\/\//);
   });
 
+  it("routes call requests to the existing inquiry form", () => {
+    expect(siteConfig.scheduleUrl).toBe("/contact");
+  });
+
   it("has a valid email format", () => {
     expect(siteConfig.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   });

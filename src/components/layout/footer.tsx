@@ -91,7 +91,7 @@ export function Footer() {
                   href={siteConfig.scheduleUrl}
                   className="text-sm text-background/60 hover:text-background transition-colors"
                 >
-                  Schedule a Call
+                  Request a Call
                 </Link>
               </li>
             </ul>

@@ -129,8 +129,9 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                 Your inquiry is in trusted hands.
               </p>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
-                Your message has been received. A member of our team will reach
-                out within 24 hours to begin your confidential discovery — in
+                Your inquiry has been received; no appointment has been booked.
+                A member of our team will review your request and reach out
+                within 24 hours to arrange your confidential discovery — in
                 complete discretion.
               </p>
               <Button variant="outline" onClick={onReset}>
@@ -160,8 +161,9 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
             </p>
             <p className="text-muted-foreground text-lg mb-8">
               Every engagement begins with a private, no-obligation discovery
-              session. Tell us about your situation &mdash; we&apos;ll show you
-              what integrated protection looks like.
+              session. Tell us about your situation &mdash; a member of our
+              team will review your inquiry and follow up to arrange a conversation.
+              Submitting this form does not book an appointment.
             </p>
             <a
               href={`mailto:${siteConfig.email}`}

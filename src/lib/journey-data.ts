@@ -227,8 +227,8 @@ export const heroContent = {
 export const ctaContent = {
   title: "Ready to Secure Your Future?",
   description:
-    "Schedule a confidential consultation to learn how AMG can integrate your protection strategy.",
-  buttonText: "Schedule a Conversation",
+    "Request a confidential consultation to learn how AMG can integrate your protection strategy. Our team will follow up to arrange a conversation.",
+  buttonText: "Request a Call",
   buttonLink: "/contact",
 };
 

@@ -70,6 +70,15 @@ describe("Footer", () => {
     );
   });
 
+  it("offers a call request through the inquiry form, not appointment booking", () => {
+    render(<Footer />);
+
+    expect(screen.getByRole("link", { name: "Request a Call" }))
+      .toHaveAttribute("href", "/contact");
+    expect(screen.queryByRole("link", { name: /schedule a call/i }))
+      .not.toBeInTheDocument();
+  });
+
   it("renders copyright text", () => {
     render(<Footer />);
 
