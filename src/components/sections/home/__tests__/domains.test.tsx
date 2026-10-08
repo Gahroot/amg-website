@@ -6,14 +6,14 @@ describe("Domains", () => {
     render(<Domains />);
 
     expect(
-      screen.getByText("Five Domains. One Operating System.")
+      screen.getByText("Five disciplines, one integrated framework")
     ).toBeInTheDocument();
   });
 
-  it("renders label 'OUR DOMAINS'", () => {
+  it("renders the strategic domains label", () => {
     render(<Domains />);
 
-    expect(screen.getByText("OUR DOMAINS")).toBeInTheDocument();
+    expect(screen.getByText("Strategic Domains")).toBeInTheDocument();
   });
 
   it("renders all 5 domain titles", () => {
@@ -27,7 +27,8 @@ describe("Domains", () => {
       "Business Intelligence",
     ];
     for (const title of domainTitles) {
-      expect(screen.getByText(title)).toBeInTheDocument();
+      // Desktop cards and the mobile spine both include each title.
+      expect(screen.getAllByText(title)).toHaveLength(2);
     }
   });
 

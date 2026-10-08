@@ -43,26 +43,12 @@ export function Hero() {
       // Wordmark slides up
       tl.fromTo(
         ".hero-wordmark",
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8 },
+        { y: 60 },
+        { y: 0, duration: 0.8 },
         0.1
       );
 
-      // Tagline fades in
-      tl.fromTo(
-        ".hero-tagline",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6 },
-        0.8
-      );
-
-      // CTA fades in
-      tl.fromTo(
-        ".hero-cta",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        1.0
-      );
+      // Keep the service tagline and contact link visible and stationary.
 
       // Fade background as hero scrolls out of view
       if (bgRef.current) {
