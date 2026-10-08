@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import Link from "next/link";
 import { OverlayNav } from "./overlay-nav";
 
 export function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
   const [isSolid, setIsSolid] = useState(true);
 
   useEffect(() => {
@@ -85,6 +87,10 @@ export function Navbar() {
 
             {/* Menu trigger */}
             <button
+              ref={menuTriggerRef}
+              aria-expanded={navOpen}
+              aria-controls={menuId}
+              aria-haspopup="dialog"
               onClick={() => setNavOpen(true)}
               className={`font-mono text-sm uppercase tracking-widest hover:opacity-80 active:opacity-60 transition-opacity duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center ${
                 isSolid ? "text-muted-foreground" : "text-white"
@@ -97,7 +103,12 @@ export function Navbar() {
         </div>
       </header>
 
-      <OverlayNav open={navOpen} onClose={() => setNavOpen(false)} />
+      <OverlayNav
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+        id={menuId}
+        triggerRef={menuTriggerRef}
+      />
     </>
   );
 }
