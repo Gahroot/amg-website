@@ -1,7 +1,55 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { domains } from "@/lib/domains-data";
 import { Domains } from "../domains";
 
+// A first-visit control must work before the WebGL graph supplies its API.
+vi.mock("@/components/shared/constellation-graph", () => ({
+  ConstellationGraph: () => null,
+}));
+vi.mock("@/lib/gsap", () => ({ useGSAP: vi.fn(), initGSAP: vi.fn() }));
+
 describe("Domains", () => {
+  it("opens cards with Enter and Space before the graph is ready, with a description and link payoff", async () => {
+    const user = userEvent.setup();
+    render(<Domains />);
+    const reset = screen.getByRole("button", { name: "Reset domain selection" });
+    await user.tab();
+    expect(reset).toHaveFocus();
+    await user.tab();
+    const first = screen.getByRole("button", { name: domains[0].title });
+    expect(first).toHaveFocus();
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    await user.keyboard("{Enter}");
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    const detail = document.getElementById(first.getAttribute("aria-controls") ?? "");
+    expect(detail).toBeVisible();
+    await waitFor(() => expect(within(detail as HTMLElement).getByText(domains[0].description)).toBeVisible());
+    await user.tab();
+    expect(screen.getByRole("link", { name: /learn more/i })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(first).toHaveFocus();
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    await user.keyboard(" ");
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    await user.click(reset);
+    expect(first).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("preserves pointer toggling and changes the expanded description", async () => {
+    const user = userEvent.setup();
+    render(<Domains />);
+    for (const domain of domains) {
+      const card = screen.getByRole("button", { name: domain.title });
+      await user.click(card);
+      expect(card).toHaveAttribute("aria-expanded", "true");
+      const detail = document.getElementById(card.getAttribute("aria-controls") ?? "");
+      await waitFor(() => expect(within(detail as HTMLElement).getByText(domain.description)).toBeVisible());
+      expect(screen.getByRole("link", { name: /learn more/i })).toHaveAttribute("href", "/strategies");
+      await user.click(card);
+      expect(card).toHaveAttribute("aria-expanded", "false");
+    }
+  });
   it("renders section heading", () => {
     render(<Domains />);
 

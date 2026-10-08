@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { gsap, useGSAP, initGSAP } from "@/lib/gsap";
 import { useReducedMotion } from "@/lib/use-can-pin";
 import { domains } from "@/lib/domains-data";
@@ -49,6 +49,8 @@ export function StrategiesDomains() {
   const markerGroupRef = useRef<SVGGElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<SVGCircleElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const entranceTimelineRef = useRef<ReturnType<typeof gsap.timeline> | null>(null);
 
   const [activeIndex, setActiveIndex] = useState(() =>
     Math.floor(Math.random() * MARKER_COUNT)
@@ -56,8 +58,6 @@ export function StrategiesDomains() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [entranceComplete, setEntranceComplete] = useState(false);
   const reducedMotion = useReducedMotion();
-
-  const activeDomain = domains[activeIndex];
 
   /* ---- Auto-rotation ---- */
   useEffect(() => {
@@ -89,28 +89,46 @@ export function StrategiesDomains() {
   /* ---- Click handler ---- */
   const handleMarkerClick = useCallback(
     (i: number) => {
+      entranceTimelineRef.current?.progress(1);
       setActiveIndex(i);
       setIsAutoPlaying(false);
     },
     []
   );
 
+  const handleSelectorFocus = useCallback(() => {
+    // Keyboard access and description visibility must not wait for scroll animation.
+    entranceTimelineRef.current?.progress(1);
+    setIsAutoPlaying(false);
+  }, []);
+
   /* ---- Keyboard navigation ---- */
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        e.preventDefault();
-        const next = (activeIndex + 1) % MARKER_COUNT;
-        setActiveIndex(next);
-        setIsAutoPlaying(false);
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        e.preventDefault();
-        const prev = (activeIndex - 1 + MARKER_COUNT) % MARKER_COUNT;
-        setActiveIndex(prev);
-        setIsAutoPlaying(false);
+    (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      let next: number;
+      switch (e.key) {
+        case "ArrowRight":
+        case "ArrowDown":
+          next = (index + 1) % MARKER_COUNT;
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+          next = (index - 1 + MARKER_COUNT) % MARKER_COUNT;
+          break;
+        case "Home":
+          next = 0;
+          break;
+        case "End":
+          next = MARKER_COUNT - 1;
+          break;
+        default:
+          return;
       }
+      e.preventDefault();
+      handleMarkerClick(next);
+      tabRefs.current[next]?.focus();
     },
-    [activeIndex]
+    [handleMarkerClick]
   );
 
   /* ---- GSAP entrance ---- */
@@ -145,6 +163,8 @@ export function StrategiesDomains() {
           once: true,
         },
       });
+
+      entranceTimelineRef.current = tl;
 
       // 1. Logo scales in
       if (logo) {
@@ -197,9 +217,10 @@ export function StrategiesDomains() {
       return () => {
         tl.scrollTrigger?.kill();
         tl.kill();
+        entranceTimelineRef.current = null;
       };
     },
-    { scope: sectionRef, dependencies: [reducedMotion] }
+    { scope: sectionRef, dependencies: [reducedMotion], revertOnUpdate: true }
   );
 
   return (
@@ -227,7 +248,9 @@ export function StrategiesDomains() {
             <svg
               viewBox="-10 -10 460 460"
               className="w-full max-w-[400px] aspect-square"
-              aria-hidden="true"
+              role="tablist"
+              aria-label="Domain selector"
+              onFocusCapture={handleSelectorFocus}
             >
               {/* Outer ring */}
               <circle
@@ -283,52 +306,51 @@ export function StrategiesDomains() {
               })()}
 
               {/* Icon markers */}
-              <g
-                ref={markerGroupRef}
-                role="tablist"
-                aria-label="Domain selector"
-              >
+              <g ref={markerGroupRef}>
                 {domains.map((domain, i) => {
                   const pos = ringPoint(i, RING_R + ICON_OFFSET);
                   const isActive = activeIndex === i;
-                  const size = isActive ? 36 : 28;
+                  const size = 44;
                   return (
                     <g key={domain.title} data-marker>
-                      {/* Hit area circle (invisible but clickable) */}
-                      <circle
-                        cx={pos.x}
-                        cy={pos.y}
-                        r={20}
-                        fill="transparent"
-                        className="cursor-pointer"
-                        role="tab"
-                        aria-selected={isActive}
-                        aria-label={domain.title}
-                        tabIndex={isActive ? 0 : -1}
-                        onClick={() => handleMarkerClick(i)}
-                        onKeyDown={handleKeyDown}
-                      />
-                      {/* Icon via foreignObject */}
+                      {/* Native HTML controls inside the SVG dial. */}
                       <foreignObject
                         x={pos.x - size / 2}
                         y={pos.y - size / 2}
                         width={size}
                         height={size}
-                        className="pointer-events-none"
                       >
-                        <div
-                          className={`flex items-center justify-center w-full h-full rounded-full transition-all duration-300 ${
-                            isActive
-                              ? "bg-primary/15 text-primary"
-                              : "text-primary/40"
-                          }`}
+                        <button
+                          type="button"
+                          role="tab"
+                          id={`dial-tab-${i}`}
+                          aria-controls={`dial-panel-${i}`}
+                          aria-selected={isActive}
+                          aria-label={domain.title}
+                          title={domain.title}
+                          tabIndex={isActive ? 0 : -1}
+                          ref={(el) => {
+                            tabRefs.current[i] = el;
+                          }}
+                          onClick={() => handleMarkerClick(i)}
+                          onKeyDown={(e) => handleKeyDown(e, i)}
+                          className="flex cursor-pointer items-center justify-center w-full h-full rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                         >
-                          <domain.icon
-                            className={`transition-all duration-300 ${
-                              isActive ? "size-4.5" : "size-3.5"
+                          <span
+                            className={`flex items-center justify-center rounded-full transition-colors duration-300 ${
+                              isActive
+                                ? "size-9 bg-primary/15 text-primary"
+                                : "size-7 text-primary/40"
                             }`}
-                          />
-                        </div>
+                          >
+                            <domain.icon
+                              aria-hidden="true"
+                              className={`transition-all duration-300 ${
+                                isActive ? "size-4.5" : "size-3.5"
+                              }`}
+                            />
+                          </span>
+                        </button>
                       </foreignObject>
                     </g>
                   );
@@ -352,32 +374,39 @@ export function StrategiesDomains() {
 
           {/* Right: Content panel */}
           <div ref={contentRef}>
-            <AnimatePresence mode="wait">
+            {domains.map((domain, i) => (
               <motion.div
-                key={activeIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                key={domain.title}
+                id={`dial-panel-${i}`}
+                hidden={activeIndex !== i}
+                initial={false}
+                animate={{
+                  opacity: activeIndex === i ? 1 : 0,
+                  x: reducedMotion || activeIndex === i ? 0 : 20,
+                }}
+                transition={{ duration: reducedMotion ? 0 : 0.3, ease: "easeOut" }}
                 role="tabpanel"
-                aria-labelledby={`dial-tab-${activeIndex}`}
+                aria-labelledby={`dial-tab-${i}`}
+                tabIndex={activeIndex === i ? 0 : -1}
+                className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                onFocusCapture={handleSelectorFocus}
               >
                 {/* Icon watermark */}
-                <activeDomain.icon className="size-12 lg:size-14 text-primary/20 mb-4" strokeWidth={1.5} />
+                <domain.icon className="size-12 lg:size-14 text-primary/20 mb-4" strokeWidth={1.5} />
 
                 {/* Title */}
                 <h3 className="font-serif text-2xl lg:text-3xl tracking-tight mb-4">
-                  {activeDomain.title}
+                  {domain.title}
                 </h3>
 
                 {/* Description */}
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  {activeDomain.description}
+                  {domain.description}
                 </p>
 
                 {/* Capabilities grid */}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  {activeDomain.capabilities.map((cap) => (
+                  {domain.capabilities.map((cap) => (
                     <div key={cap} className="flex items-start gap-2">
                       <span className="mt-1.5 size-1 rounded-full bg-primary/40 shrink-0" />
                       <span className="font-mono text-xs text-muted-foreground">
@@ -387,7 +416,7 @@ export function StrategiesDomains() {
                   ))}
                 </div>
               </motion.div>
-            </AnimatePresence>
+            ))}
           </div>
         </div>
 

@@ -51,7 +51,7 @@ export function Domains() {
   const rafRef = useRef<number>(0);
 
   // DOM refs for position tracking
-  const hubRef = useRef<HTMLDivElement>(null);
+  const hubRef = useRef<HTMLButtonElement>(null);
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Graph data for the 3D layer
@@ -135,17 +135,16 @@ export function Domains() {
   const handleCardClick = useCallback(
     (index: number) => {
       const api = graphApiRef.current;
-      if (!api) return;
 
       if (selectedIndex === index) {
         // Deselect
         setSelectedIndex(null);
-        api.resetCamera();
-        api.setAutoRotate(true);
+        api?.resetCamera();
+        api?.setAutoRotate(true);
       } else {
         setSelectedIndex(index);
-        api.zoomToNode(DOMAIN_IDS[index]);
-        api.setAutoRotate(false);
+        api?.zoomToNode(DOMAIN_IDS[index]);
+        api?.setAutoRotate(false);
       }
     },
     [selectedIndex],
@@ -153,19 +152,23 @@ export function Domains() {
 
   const handleHubClick = useCallback(() => {
     const api = graphApiRef.current;
-    if (!api) return;
     setSelectedIndex(null);
-    api.resetCamera();
-    api.setAutoRotate(true);
+    api?.resetCamera();
+    api?.setAutoRotate(true);
   }, []);
 
   const handleBackdropClick = useCallback(() => {
+    if (selectedIndex !== null) {
+      const card = cardRefs.current.get(selectedIndex);
+      if (card?.contains(document.activeElement)) {
+        card.querySelector("button")?.focus();
+      }
+    }
     const api = graphApiRef.current;
-    if (!api) return;
     setSelectedIndex(null);
-    api.resetCamera();
-    api.setAutoRotate(true);
-  }, []);
+    api?.resetCamera();
+    api?.setAutoRotate(true);
+  }, [selectedIndex]);
 
   // Escape key to dismiss
   useEffect(() => {
@@ -215,9 +218,11 @@ export function Domains() {
             )}
 
             {/* Hub logo mark */}
-            <div
+            <button
+              type="button"
+              aria-label="Reset domain selection"
               ref={hubRef}
-              className="pointer-events-auto absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-3"
+              className="pointer-events-auto absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               onClick={handleHubClick}
               style={{ left: "50%", top: "50%" }}
             >
@@ -231,7 +236,7 @@ export function Domains() {
               <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.25em] text-primary/50">
                 Anchor Mill Group
               </span>
-            </div>
+            </button>
 
             {/* Domain cards */}
             {domains.map((domain, i) => {
@@ -282,7 +287,16 @@ export function Domains() {
                         minWidth: isSelected ? 280 : 180,
                       }}
                     >
-                      <div className="flex items-center gap-2.5 px-4 py-3">
+                      <button
+                        type="button"
+                        aria-expanded={isSelected}
+                        aria-controls={`home-domain-${i}`}
+                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCardClick(i);
+                        }}
+                      >
                         <Icon
                           className="h-4 w-4 shrink-0 text-primary"
                           strokeWidth={1.5}
@@ -290,39 +304,41 @@ export function Domains() {
                         <span className="whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-wider text-primary">
                           {domain.title}
                         </span>
-                      </div>
+                      </button>
 
-                      <AnimatePresence>
-                        {isSelected && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{
-                              height: {
-                                duration: 0.35,
-                                ease: [0.25, 0.1, 0.25, 1],
-                              },
-                              opacity: { duration: 0.25, delay: 0.1 },
-                            }}
-                            className="overflow-hidden"
-                          >
-                            <div className="border-t border-primary/10 px-4 pb-4 pt-3">
-                              <p className="font-sans text-sm leading-relaxed text-muted-foreground">
-                                {domain.description}
-                              </p>
-                              <Link
-                                href="/strategies"
-                                className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-primary transition-colors hover:text-primary/70"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                Learn more
-                                <ArrowRight className="h-3 w-3" />
-                              </Link>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      <div id={`home-domain-${i}`} hidden={!isSelected}>
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{
+                                height: {
+                                  duration: 0.35,
+                                  ease: [0.25, 0.1, 0.25, 1],
+                                },
+                                opacity: { duration: 0.25, delay: 0.1 },
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border-t border-primary/10 px-4 pb-4 pt-3">
+                                <p className="font-sans text-sm leading-relaxed text-muted-foreground">
+                                  {domain.description}
+                                </p>
+                                <Link
+                                  href="/strategies"
+                                  className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-primary transition-colors hover:text-primary/70"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Learn more
+                                  <ArrowRight className="h-3 w-3" />
+                                </Link>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </motion.div>
                   </motion.div>
                 </div>
