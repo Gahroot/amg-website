@@ -41,7 +41,7 @@ describe("ContactFAQ", () => {
       "What makes AMG different from traditional security firms?",
       "How long does an engagement typically take?",
       "Is my information kept confidential?",
-      "Can we start with just one domain?",
+      "How many domains do we need to start?",
     ];
 
     for (const question of questions) {
@@ -58,12 +58,26 @@ describe("ContactFAQ", () => {
       /Traditional firms address one domain in isolation/,
       /Initial discovery and blueprint development takes 4-6 weeks/,
       /Absolute discretion is foundational/,
-      /While our integrated approach is most powerful/,
+      /Engagements begin with at least two of our five domains/,
     ];
 
     for (const answer of answers) {
       expect(screen.getByText(answer)).toBeInTheDocument();
     }
+  });
+
+  it("explains the two-domain minimum without promising a single-domain engagement", () => {
+    render(<ContactFAQ />);
+
+    expect(
+      screen.getByRole("button", { name: "How many domains do we need to start?" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Engagements begin with at least two of our five domains, not a single domain, to ensure cross-domain intelligence rather than siloed expertise. Choose the domains most critical to your needs and add domains as those needs evolve."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Yes\. While our integrated approach/)).not.toBeInTheDocument();
   });
 
   it("renders 'Who is AMG designed for?' question", () => {

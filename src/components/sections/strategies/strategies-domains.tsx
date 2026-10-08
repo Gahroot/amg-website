@@ -235,9 +235,10 @@ export function StrategiesDomains() {
             A Modular Suite of Expertise
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mt-4">
-            Each domain stands on its own as a world-class discipline — engage
-            one, several, or all. Together they form a coordinated layer of
-            protection and performance tailored to your family&apos;s precise needs.
+            Begin with at least two of our five domains, chosen for your
+            family&apos;s precise needs, and add domains as those needs evolve.
+            Together they provide cross-domain intelligence and coordinated
+            protection and performance.
           </p>
         </div>
 

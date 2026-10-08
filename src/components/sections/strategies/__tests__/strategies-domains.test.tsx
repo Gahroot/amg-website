@@ -48,6 +48,17 @@ function expectPayoff(index: number): void {
 describe("StrategiesDomains selector", () => {
   beforeEach(() => { motionPreference.mockReturnValue(true); });
 
+  it("offers a tailored program starting with at least two domains, with room to expand", () => {
+    render(<StrategiesDomains />);
+
+    expect(
+      screen.getByText(
+        "Begin with at least two of our five domains, chosen for your family's precise needs, and add domains as those needs evolve. Together they provide cross-domain intelligence and coordinated protection and performance."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/one, several, or all/)).not.toBeInTheDocument();
+  });
+
   it("auto-rotates until keyboard focus enters, then keeps focus and description stable", () => {
     motionPreference.mockReturnValue(false);
     vi.useFakeTimers();

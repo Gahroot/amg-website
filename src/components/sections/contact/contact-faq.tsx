@@ -36,9 +36,9 @@ const faqs = [
       "Absolute discretion is foundational to everything we do. All communications and client information are protected under strict confidentiality protocols.",
   },
   {
-    question: "Can we start with just one domain?",
+    question: "How many domains do we need to start?",
     answer:
-      "Yes. While our integrated approach is most powerful, clients can begin with two or more domains and expand as needs evolve.",
+      "Engagements begin with at least two of our five domains, not a single domain, to ensure cross-domain intelligence rather than siloed expertise. Choose the domains most critical to your needs and add domains as those needs evolve.",
   },
 ];
 
