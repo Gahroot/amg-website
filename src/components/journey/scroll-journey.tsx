@@ -9,7 +9,7 @@
  * Sections:
  * 1. Hero - Full viewport with video background and parallax
  * 2. Horizontal Tiles - 6 solutions displayed horizontally
- * 3. Vertical Timeline - 5 stops with animated dot
+ * 3. Vertical Timeline - 5 readable stops in document flow
  * 4. CTA - Final call-to-action
  */
 

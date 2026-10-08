@@ -6,15 +6,14 @@
  * Vertical timeline section with 5 content stops.
  *
  * Desktop behavior:
- * - Pinned scroll (500vh track height)
- * - Vertical line with animated dot that travels down
- * - Content panels fade/slide in when dot reaches each stop
+ * - Natural-height stack: every stage scrolls with the document
+ * - Static timeline rail and stage markers, including reduced motion
  *
  * Mobile behavior:
  * - Vertical stack with progress indicator at top
  */
 
-import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { timelineStops } from "@/lib/journey-data";
 import {
   AlertTriangle,
@@ -24,11 +23,6 @@ import {
   Award,
   Globe,
 } from "lucide-react";
-import { loadGSAP } from "@/lib/gsap";
-
-interface JourneyVerticalTimelineProps {
-  trackHeight?: string;
-}
 
 // Icon components
 const SingleRelationshipIcon = () => (
@@ -77,91 +71,10 @@ const ProactiveIcon = () => (
   </div>
 );
 
-export function JourneyVerticalTimeline({
-  trackHeight = "500vh",
-}: JourneyVerticalTimelineProps) {
+export function JourneyVerticalTimeline(): React.JSX.Element {
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
   const stopsRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const ctxRef = useRef<gsap.Context | null>(null);
-
-  useLayoutEffect(() => {
-    let mounted = true;
-
-    const setupAnimation = async () => {
-      const { gsap } = await loadGSAP();
-      if (!mounted || !containerRef.current) return;
-
-      const container = containerRef.current;
-      const line = lineRef.current;
-      const dot = dotRef.current;
-      const stops = stopsRefs.current.filter(Boolean);
-
-      if (!line || !dot || stops.length === 0) return;
-
-      const mobile = window.innerWidth < 768;
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      if (mobile || reducedMotion) return;
-
-      const firstStop = stops[0];
-      const lastStop = stops[stops.length - 1];
-
-      if (!firstStop || !lastStop) return;
-
-      const lineTop = firstStop.offsetTop + firstStop.offsetHeight / 2;
-      const lineBottom = lastStop.offsetTop + lastStop.offsetHeight / 2;
-      const lineDistance = lineBottom - lineTop;
-
-      gsap.set(line, { height: lineDistance });
-
-      const ctx = gsap.context(() => {
-        gsap.to(dot, {
-          y: lineDistance,
-          ease: "none",
-          scrollTrigger: {
-            trigger: container,
-            start: "top top",
-            end: "bottom top",
-            scrub: 1,
-          },
-        });
-
-        stops.forEach((stop) => {
-          if (!stop) return;
-          const content = stop.querySelector(".timeline-content");
-          if (content) {
-            gsap.fromTo(
-              content,
-              { opacity: 0.3, y: 30 },
-              {
-                opacity: 1,
-                y: 0,
-                scrollTrigger: {
-                  trigger: stop,
-                  start: "top 60%",
-                  end: "top 40%",
-                  scrub: true,
-                },
-              }
-            );
-          }
-        });
-      }, container);
-
-      ctxRef.current = ctx;
-    };
-
-    setupAnimation();
-
-    return () => {
-      mounted = false;
-      ctxRef.current?.revert();
-    };
-  }, []);
 
   // Mobile detection
   useEffect(() => {
@@ -437,7 +350,7 @@ export function JourneyVerticalTimeline({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="timeline-outcomes-grid grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-8 bg-primary/5 border border-primary/20 rounded-xl text-center">
               <VisibilityIcon />
               <h3 className="font-mono text-sm font-semibold uppercase tracking-widest text-primary mt-4 mb-3">
@@ -485,47 +398,30 @@ export function JourneyVerticalTimeline({
     );
   };
 
-  // Desktop: Pinned timeline with animated dot
+  // Desktop content stays in document flow, independent of viewport height or motion.
   if (!isMobile) {
     return (
-      <section
-        ref={containerRef}
-        className="journey-vertical-timeline relative bg-background"
-        style={{ height: trackHeight }}
-      >
-        <div className="timeline-viewport sticky top-0 overflow-hidden" style={{ height: "100vh" }}>
-          <div className="h-full flex items-center py-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="grid grid-cols-12 gap-8 lg:gap-12">
-                <div className="col-span-1 relative">
-                  <div
-                    ref={lineRef}
-                    className="absolute left-1/2 top-0 w-px bg-primary/20 -translate-x-1/2"
-                    style={{ height: 0 }}
-                  >
-                    <div
-                      ref={dotRef}
-                      className="absolute top-0 left-1/2 w-5 h-5 rounded-full bg-primary border-4 border-background -translate-x-1/2 -translate-y-1/2 shadow-lg"
-                      style={{ top: 0 }}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-span-11 space-y-40">
-                  {timelineStops.map((stop, index) => (
-                    <div
-                      key={stop.id}
-                      ref={(el) => {
-                        stopsRefs.current[index] = el;
-                      }}
-                      className="timeline-stop min-h-[40vh] flex items-center"
-                    >
-                      <div className="w-full">{renderStopContent(stop)}</div>
-                    </div>
-                  ))}
-                </div>
+      <section className="journey-vertical-timeline relative bg-background py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative space-y-24 lg:space-y-32">
+            <div
+              aria-hidden="true"
+              className="absolute left-4 inset-y-0 w-px bg-primary/20"
+            />
+            {timelineStops.map((stop, index) => (
+              <div
+                key={stop.id}
+                className="timeline-stop relative pl-16 lg:pl-24"
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-0 w-8 h-8 rounded-full bg-background border border-primary/30 flex items-center justify-center font-mono text-xs text-primary"
+                >
+                  {index + 1}
+                </span>
+                {renderStopContent(stop)}
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

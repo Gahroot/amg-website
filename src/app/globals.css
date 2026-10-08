@@ -289,6 +289,21 @@ html.lenis body {
   scroll-behavior: smooth;
 }
 
+/* Timeline content must reflow with enlarged text, never into a clipped viewport. */
+.journey-vertical-timeline .timeline-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Use text-relative minimums so desktop cards stack when text is enlarged. */
+.journey-vertical-timeline .timeline-content > .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+}
+
+.journey-vertical-timeline .timeline-content > .timeline-outcomes-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
 /* Override for reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .scroll-journey {
@@ -296,8 +311,7 @@ html.lenis body {
   }
 
   /* Disable parallax and pinned scrolling */
-  .journey-horizontal-tiles,
-  .journey-vertical-timeline {
+  .journey-horizontal-tiles {
     height: auto !important;
   }
 
