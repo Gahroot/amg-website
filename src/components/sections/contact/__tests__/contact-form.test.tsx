@@ -100,6 +100,22 @@ describe("ContactForm", () => {
     expect(
       screen.getByText("Please provide more detail"),
     ).toBeInTheDocument();
+    for (const [label, error] of [
+      ["Name", "Name must be at least 2 characters"],
+      ["Organization", "Organization is required"],
+      ["Email", "Please enter a valid email"],
+      ["Message", "Please provide more detail"],
+    ]) {
+      const field = screen.getByLabelText(label, { exact: true });
+      expect(field).toHaveAttribute("aria-invalid", "true");
+      expect(field).toHaveAccessibleDescription(expect.stringContaining(error));
+      await user.click(screen.getByRole("link", { name: `Review ${label}` }));
+      expect(field).toHaveFocus();
+      await user.type(field, " ");
+      await user.type(field, "A");
+      expect(field).toHaveAttribute("aria-invalid", "true");
+      expect(field).toHaveAccessibleDescription(expect.stringContaining(error));
+    }
   });
 
   it("shows name error for short name (1 char)", async () => {
@@ -190,7 +206,7 @@ describe("ContactForm", () => {
     expect(phoneError).toHaveLength(0);
   });
 
-  it("clears specific error when user types in that field", async () => {
+  it("retains last-submission errors through edits until checked on resubmission", async () => {
     const user = setupUser();
     mockSubmit.mockResolvedValueOnce({
       success: false,
@@ -207,17 +223,76 @@ describe("ContactForm", () => {
       await screen.findByText("Name must be at least 2 characters"),
     ).toBeInTheDocument();
 
-    // Type in the name field to clear its error
-    await user.type(screen.getByLabelText(/^name$/i), "Jo");
-
-    expect(
-      screen.queryByText("Name must be at least 2 characters"),
-    ).not.toBeInTheDocument();
+    const name = screen.getByLabelText(/^name$/i);
+    await user.type(name, "J");
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(name).toHaveAccessibleDescription(/Name must be at least 2 characters/);
+    await user.type(name, "o");
+    expect(screen.getByText("Name must be at least 2 characters")).toBeInTheDocument();
+    expect(screen.getByText(/errors from your last submission stay visible/i)).toBeInTheDocument();
 
     // Other errors should remain
     expect(
       screen.getByText("Please enter a valid email"),
     ).toBeInTheDocument();
+  });
+
+  it("explains requirements and individual/family organization entries before submission", () => {
+    render(<ContactForm />);
+    expect(screen.getByText(/name, organization, email and message are required/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^name$/i)).toBeRequired();
+    expect(screen.getByLabelText(/^name$/i)).toHaveAccessibleDescription(/at least 2 characters/i);
+    expect(screen.getByLabelText(/^organization$/i)).toBeRequired();
+    expect(screen.getByLabelText(/^organization$/i)).toHaveAccessibleDescription(/at least 2 characters.*individual or family.*Individual.*Doe family/i);
+    expect(screen.getByLabelText(/^email$/i)).toHaveAccessibleDescription(/valid email address/i);
+    expect(screen.getByLabelText(/^message$/i)).toHaveAccessibleDescription(/at least 10 characters/i);
+    expect(screen.getByLabelText(/^phone/i)).not.toBeRequired();
+    expect(screen.getByRole("checkbox")).not.toBeRequired();
+  });
+
+  it("keeps a first-time individual's values and announces linked organization recovery", async () => {
+    const user = setupUser();
+    mockSubmit.mockResolvedValueOnce({ success: false, errors: { organization: "Organization is required" } });
+    render(<ContactForm />);
+    await user.type(screen.getByLabelText(/^name$/i), "John Doe");
+    await user.type(screen.getByLabelText(/^email$/i), "john@example.com");
+    await user.type(screen.getByLabelText(/^message$/i), "Please help protect my family.");
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveFocus();
+    await user.click(screen.getByRole("link", { name: "Review Organization" }));
+    const organization = screen.getByLabelText(/^organization$/i);
+    expect(organization).toHaveFocus();
+    expect(organization).toHaveAccessibleDescription(/Organization is required/);
+    await user.type(organization, " ");
+    await user.type(organization, "A");
+    expect(organization).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Organization is required")).toBeInTheDocument();
+    await user.clear(organization);
+    await user.type(organization, "Individual");
+    expect(screen.getByLabelText(/^name$/i)).toHaveValue("John Doe");
+    expect(screen.getByLabelText(/^email$/i)).toHaveValue("john@example.com");
+    expect(screen.getByLabelText(/^message$/i)).toHaveValue("Please help protect my family.");
+    mockSubmit.mockResolvedValueOnce({ success: true, errors: {} });
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    expect(await screen.findByText("Thank You")).toBeInTheDocument();
+    expect(mockSubmit.mock.calls[1]?.[1].get("organization")).toBe("Individual");
+  });
+
+  it("preserves phone, consent and other values on delivery failure", async () => {
+    const user = setupUser();
+    mockSubmit.mockResolvedValueOnce({ success: false, errors: {}, formError: "Please email us directly." });
+    render(<ContactForm />);
+    await user.type(screen.getByLabelText(/^phone/i), "+1 555 123 4567");
+    await user.click(screen.getByRole("checkbox"));
+    await fillAndSubmit(user);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Please email us directly.");
+    expect(screen.getByLabelText(/^name$/i)).toHaveValue("John Doe");
+    expect(screen.getByLabelText(/^organization$/i)).toHaveValue("Doe Family Office");
+    expect(screen.getByLabelText(/^email$/i)).toHaveValue("john@example.com");
+    expect(screen.getByLabelText(/^message$/i)).toHaveValue("I need help with asset protection for my family.");
+    expect(screen.getByLabelText(/^phone/i)).toHaveValue("+1 555 123 4567");
+    expect(screen.getByRole("checkbox")).toBeChecked();
   });
 
   it("shows success state after valid submission", async () => {

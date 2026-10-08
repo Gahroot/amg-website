@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { submitContactForm } from "@/app/contact/actions";
+import { deliverContactSubmission } from "@/lib/contact-delivery";
+
+vi.mock("@/lib/contact-delivery", () => ({
+  deliverContactSubmission: vi.fn(),
+}));
 
 // Recreate the schema for testing (same as in contact-form.tsx)
 const contactSchema = z.object({
@@ -16,6 +22,49 @@ const validData = {
   phone: "+1 555 123 4567",
   message: "I would like to learn more about your services.",
 };
+
+describe("server contact requirements (RF-004)", () => {
+  beforeEach(() => {
+    vi.mocked(deliverContactSubmission).mockReset();
+    vi.mocked(deliverContactSubmission).mockResolvedValue({
+      ok: true, delivered: ["email"], failed: [],
+    });
+  });
+
+  it.each([
+    ["name", " A "],
+    ["organization", ""],
+    ["organization", "   "],
+    ["organization", " A "],
+    ["email", "not-an-email"],
+    ["message", " 123456789 "],
+  ])("rejects invalid %s before delivery", async (field, value) => {
+    const formData = new FormData();
+    for (const [key, entry] of Object.entries({ ...validData, [field]: value })) {
+      formData.set(key, entry);
+    }
+    const result = await submitContactForm({ success: false, errors: {} }, formData);
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveProperty(field);
+    expect(deliverContactSubmission).not.toHaveBeenCalled();
+  });
+
+  it.each(["Individual", "Doe family"])("accepts %s without phone or consent at the stated minimums", async (organization) => {
+    const formData = new FormData();
+    for (const [key, entry] of Object.entries({
+      name: " Jo ", organization, email: " john@example.com ",
+      message: " 1234567890 ", phone: "",
+    })) {
+      formData.set(key, entry);
+    }
+    expect(await submitContactForm({ success: false, errors: {} }, formData))
+      .toEqual({ success: true, errors: {} });
+    expect(deliverContactSubmission).toHaveBeenCalledWith({
+      name: "Jo", organization, email: "john@example.com",
+      message: "1234567890", phone: undefined, smsConsent: false,
+    }, process.env);
+  });
+});
 
 describe("contactSchema", () => {
   describe("valid data", () => {

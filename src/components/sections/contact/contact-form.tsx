@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useActionState } from "react";
+import { useState, useRef, useActionState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,13 @@ import {
 } from "@/app/contact/actions";
 
 const initialState: ContactFormState = { success: false, errors: {} };
+const fieldLabels = {
+  name: "Name",
+  organization: "Organization",
+  email: "Email",
+  phone: "Phone",
+  message: "Message",
+} as const;
 
 export function ContactForm() {
   const [resetKey, setResetKey] = useState(0);
@@ -32,29 +39,30 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
     submitContactForm,
     initialState,
   );
-  const [clearedErrors, setClearedErrors] = useState<{
-    fields: Set<string>;
-    forState: ContactFormState;
-  }>({ fields: new Set(), forState: initialState });
+  const [values, setValues] = useState({
+    name: "",
+    organization: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+  const [smsConsent, setSmsConsent] = useState(false);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const hasErrors = Object.keys(state.errors).length > 0;
+
+  useEffect(() => {
+    if (hasErrors || state.formError) errorSummaryRef.current?.focus();
+  }, [state, hasErrors]);
 
   const sectionRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
 
-  function isErrorCleared(field: string) {
-    return clearedErrors.forState === state && clearedErrors.fields.has(field);
-  }
-
   function handleFieldChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) {
-    const { name } = e.target;
-    if (state.errors[name as keyof ContactFormState["errors"]] && !isErrorCleared(name)) {
-      setClearedErrors((prev) => ({
-        fields: new Set(prev.forState === state ? prev.fields : []).add(name),
-        forState: state,
-      }));
-    }
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void {
+    const { name, value } = event.target;
+    setValues((previous) => ({ ...previous, [name]: value }));
   }
 
   useGSAP(
@@ -182,7 +190,54 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
           {/* Right column — form */}
           <div ref={rightRef}>
             <div className="bg-card/50 border border-rule rounded-2xl p-8 lg:p-10">
-              <form action={formAction} noValidate className="space-y-8">
+              <form
+                action={formAction}
+                noValidate
+                className="space-y-8"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Name, organization, email and message are required. Phone and
+                  text-message consent are optional. Minimum lengths exclude
+                  surrounding spaces.
+                </p>
+                {(hasErrors || state.formError) && (
+                  <div
+                    ref={errorSummaryRef}
+                    role="alert"
+                    tabIndex={-1}
+                    className="space-y-2 text-sm text-destructive rounded-md focus-visible:outline-2 focus-visible:outline-current"
+                  >
+                    {hasErrors && (
+                      <>
+                        <p>We couldn’t send your message. Review the fields below.</p>
+                        <p>
+                          Errors from your last submission stay visible while you
+                          edit. Select a field below to correct it, then send your
+                          message again to check your corrections.
+                        </p>
+                        <ul className="list-disc pl-5">
+                          {Object.entries(fieldLabels).map(([field, label]) =>
+                            state.errors[field as keyof typeof fieldLabels] ? (
+                              <li key={field}>
+                                <a
+                                  href={`#${field}`}
+                                  className="underline"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    document.getElementById(field)?.focus();
+                                  }}
+                                >
+                                  Review {label}
+                                </a>
+                              </li>
+                            ) : null,
+                          )}
+                        </ul>
+                      </>
+                    )}
+                    {state.formError && <p>{state.formError}</p>}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label
                     htmlFor="name"
@@ -194,14 +249,19 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                     id="name"
                     name="name"
                     placeholder="Your full name"
+                    required
+                    minLength={2}
+                    value={values.name}
                     onChange={handleFieldChange}
-                    aria-invalid={
-                      !!state.errors.name && !isErrorCleared("name")
-                    }
+                    aria-describedby={`name-help${state.errors.name ? " name-error" : ""}`}
+                    aria-invalid={!!state.errors.name}
                     className="bg-background h-12 px-4 focus-visible:ring-primary/50"
                   />
-                  {state.errors.name && !isErrorCleared("name") && (
-                    <p className="text-sm text-destructive">
+                  <p id="name-help" className="text-sm text-muted-foreground">
+                    Required. At least 2 characters.
+                  </p>
+                  {state.errors.name && (
+                    <p id="name-error" className="text-sm text-destructive">
                       {state.errors.name}
                     </p>
                   )}
@@ -217,20 +277,25 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                   <Input
                     id="organization"
                     name="organization"
-                    placeholder="Your organization"
+                    placeholder="Your organization or family name"
+                    required
+                    minLength={2}
+                    value={values.organization}
                     onChange={handleFieldChange}
-                    aria-invalid={
-                      !!state.errors.organization &&
-                      !isErrorCleared("organization")
-                    }
+                    aria-describedby={`organization-help${state.errors.organization ? " organization-error" : ""}`}
+                    aria-invalid={!!state.errors.organization}
                     className="bg-background h-12 px-4 focus-visible:ring-primary/50"
                   />
-                  {state.errors.organization &&
-                    !isErrorCleared("organization") && (
-                      <p className="text-sm text-destructive">
-                        {state.errors.organization}
-                      </p>
-                    )}
+                  <p id="organization-help" className="text-sm text-muted-foreground">
+                    Required. At least 2 characters. If contacting us as an
+                    individual or family, enter “Individual” or your family name
+                    (for example, “Doe family”).
+                  </p>
+                  {state.errors.organization && (
+                    <p id="organization-error" className="text-sm text-destructive">
+                      {state.errors.organization}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -245,14 +310,18 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                     name="email"
                     type="email"
                     placeholder="your@email.com"
+                    required
+                    value={values.email}
                     onChange={handleFieldChange}
-                    aria-invalid={
-                      !!state.errors.email && !isErrorCleared("email")
-                    }
+                    aria-describedby={`email-help${state.errors.email ? " email-error" : ""}`}
+                    aria-invalid={!!state.errors.email}
                     className="bg-background h-12 px-4 focus-visible:ring-primary/50"
                   />
-                  {state.errors.email && !isErrorCleared("email") && (
-                    <p className="text-sm text-destructive">
+                  <p id="email-help" className="text-sm text-muted-foreground">
+                    Required. Enter a valid email address, such as name@example.com.
+                  </p>
+                  {state.errors.email && (
+                    <p id="email-error" className="text-sm text-destructive">
                       {state.errors.email}
                     </p>
                   )}
@@ -273,6 +342,7 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                     name="phone"
                     type="tel"
                     placeholder="+1 (555) 000-0000"
+                    value={values.phone}
                     onChange={handleFieldChange}
                     className="bg-background h-12 px-4 focus-visible:ring-primary/50"
                   />
@@ -282,6 +352,9 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                       name="smsConsent"
                       type="checkbox"
                       value="yes"
+                      // Keep the reset default in sync with the visitor's choice.
+                      defaultChecked={smsConsent}
+                      onChange={(event) => setSmsConsent(event.target.checked)}
                       className="mt-1 size-4 shrink-0 cursor-pointer accent-primary"
                     />
                     <label
@@ -324,24 +397,23 @@ export function ContactFormInner({ onReset }: { onReset: () => void }) {
                     name="message"
                     placeholder="Tell us about your situation and how we can help..."
                     rows={5}
+                    required
+                    minLength={10}
+                    value={values.message}
                     onChange={handleFieldChange}
-                    aria-invalid={
-                      !!state.errors.message && !isErrorCleared("message")
-                    }
+                    aria-describedby={`message-help${state.errors.message ? " message-error" : ""}`}
+                    aria-invalid={!!state.errors.message}
                     className="bg-background px-4 py-3 focus-visible:ring-primary/50"
                   />
-                  {state.errors.message && !isErrorCleared("message") && (
-                    <p className="text-sm text-destructive">
+                  <p id="message-help" className="text-sm text-muted-foreground">
+                    Required. At least 10 characters.
+                  </p>
+                  {state.errors.message && (
+                    <p id="message-error" className="text-sm text-destructive">
                       {state.errors.message}
                     </p>
                   )}
                 </div>
-
-                {state.formError && (
-                  <p role="alert" className="text-sm text-destructive">
-                    {state.formError}
-                  </p>
-                )}
 
                 <Button
                   type="submit"
